@@ -1,15 +1,18 @@
 #include "hello.hpp"
 #include "win.cpp"
 
+/** open a file **/
 void Prog::open(const string &fn) {
 	close();
 	win->setTitle({notdir(fn)," - ", name});
 }
 
+/** close a file **/
 void Prog::close() {
 	win->setTitle(name);
 }
 
+/** open the GUI **/
 void Prog::interactiveMode(const char *fn) {
 	win = new Win;
 	win->setVisible();
@@ -19,6 +22,27 @@ void Prog::interactiveMode(const char *fn) {
 	Application::run();
 }
 
+/** print out program usage **/
+void Prog::usage() {
+	print(
+		name,"\n",
+		"author: apollolux\n",
+		"license: ISC\n",
+		"usage:\n",
+		"\thello\n",
+		"\thello infile\n",
+		"\n"
+	);
+}
+
+/** initialize program variables **/
+void Prog::init() {
+	prog = this;
+	name = "Hello phoenix";
+	version = 1.0;
+}
+
+/** constructor **/
 Prog::Prog(int argc, char **argv) {
 	init();
 	if (argc==2&&file::exists(argv[1])) {
@@ -31,21 +55,7 @@ Prog::Prog(int argc, char **argv) {
 	}
 	usage();
 }
-void Prog::usage() {
-	print(
-		name,"\n",
-		"author: apollolux\n",
-		"license: ISC\n",
-		"usage:\n",
-		"\thello\n",
-		"\thello infile\n",
-		"\n"
-	);
-}
-void Prog::init() {
-	prog = this;
-	name = "Hello phoenix";
-}
+
 
 int main(int argc, char **argv) {
 	#if defined(PLATFORM_WINDOWS)
