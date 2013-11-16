@@ -30,6 +30,7 @@ void pWidget::setFont(string font) {
 
 void pWidget::setGeometry(Geometry geometry) {
   SetWindowPos(hwnd, NULL, geometry.x, geometry.y, geometry.width, geometry.height, SWP_NOZORDER);
+  if(widget.onSize) widget.onSize();
 }
 
 void pWidget::setVisible(bool visible) {

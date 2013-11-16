@@ -4,10 +4,6 @@ Size pVerticalSlider::minimumSize() {
   return {0, 25};
 }
 
-unsigned pVerticalSlider::position() {
-  return SendMessage(hwnd, TBM_GETPOS, 0, 0);
-}
-
 void pVerticalSlider::setLength(unsigned length) {
   length += (length == 0);
   SendMessage(hwnd, TBM_SETRANGE, (WPARAM)true, (LPARAM)MAKELONG(0, length - 1));

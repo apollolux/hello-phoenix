@@ -170,7 +170,7 @@ void pWindow::append(Widget& widget) {
 
   @autoreleasepool {
     [widget.p.cocoaView removeFromSuperview];
-    [[cocoaWindow contentView] addSubview:widget.p.cocoaView positioned:NSWindowBelow relativeTo:nil];
+    [[cocoaWindow contentView] addSubview:widget.p.cocoaView positioned:NSWindowAbove relativeTo:nil];
     widget.p.setGeometry(widget.geometry());
     [[cocoaWindow contentView] setNeedsDisplay:YES];
   }

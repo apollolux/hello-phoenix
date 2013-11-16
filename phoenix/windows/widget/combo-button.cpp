@@ -11,33 +11,28 @@ Size pComboButton::minimumSize() {
   return {maximumWidth + 24, pFont::size(hfont, " ").height + 10};
 }
 
-void pComboButton::modify(unsigned row, string text) {
+void pComboButton::remove(unsigned selection) {
   locked = true;
-  unsigned position = selection();
-  SendMessage(hwnd, CB_DELETESTRING, row, 0);
-  SendMessage(hwnd, CB_INSERTSTRING, row, (LPARAM)(wchar_t*)utf16_t(text));
-  setSelection(position);
+  SendMessage(hwnd, CB_DELETESTRING, selection, 0);
   locked = false;
-}
 
-void pComboButton::remove(unsigned row) {
-  locked = true;
-  unsigned position = selection();
-  SendMessage(hwnd, CB_DELETESTRING, row, 0);
-  if(position == row) setSelection(0);
-  locked = false;
+  if(selection == comboButton.state.selection) comboButton.setSelection(0);
 }
 
 void pComboButton::reset() {
   SendMessage(hwnd, CB_RESETCONTENT, 0, 0);
 }
 
-unsigned pComboButton::selection() {
-  return SendMessage(hwnd, CB_GETCURSEL, 0, 0);
+void pComboButton::setSelection(unsigned selection) {
+  SendMessage(hwnd, CB_SETCURSEL, selection, 0);
 }
 
-void pComboButton::setSelection(unsigned row) {
-  SendMessage(hwnd, CB_SETCURSEL, row, 0);
+void pComboButton::setText(unsigned selection, string text) {
+  locked = true;
+  SendMessage(hwnd, CB_DELETESTRING, selection, 0);
+  SendMessage(hwnd, CB_INSERTSTRING, selection, (LPARAM)(wchar_t*)utf16_t(text));
+  setSelection(comboButton.state.selection);
+  locked = false;
 }
 
 void pComboButton::constructor() {

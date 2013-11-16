@@ -26,8 +26,9 @@ struct Win : Window {
 	Menu mHelp;
 		Item mHelpAbout;
 	/** layouts **/
-	VerticalLayout lMain;
-	Label lblText;
+	VerticalLayout lMain, lTab1, lTab2, lTab3;
+	Label lblText, lblT2, lblT3;
+	TabFrame lTabbed;
 	/** aux **/
 	BrowserWindow browser;	/* file browser for "Open File" functionality */
 	/** proc **/

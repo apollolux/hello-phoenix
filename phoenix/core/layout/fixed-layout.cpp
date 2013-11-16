@@ -10,13 +10,13 @@ void FixedLayout::append(Sizable& sizable) {
   if(window()) window()->synchronizeLayout();
 }
 
-bool FixedLayout::enabled() {
+bool FixedLayout::enabled() const {
   if(layout()) return state.enabled && layout()->enabled();
   return state.enabled;
 }
 
 Size FixedLayout::minimumSize() {
-  unsigned width = MinimumSize, height = MinimumSize;
+  unsigned width = Size::Minimum, height = Size::Minimum;
   for(auto& child : children) {
     width  = max(width,  child.sizable->minimumSize().width);
     height = max(height, child.sizable->minimumSize().height);
@@ -61,11 +61,14 @@ void FixedLayout::setVisible(bool visible) {
 void FixedLayout::synchronizeLayout() {
   for(auto& child : children) {
     Layout::append(*child.sizable);
-    child.sizable->setGeometry(child.geometry);
+    Geometry childGeometry = child.geometry;
+    if((signed)childGeometry.width < 1) childGeometry.width = 1;
+    if((signed)childGeometry.height < 1) childGeometry.height = 1;
+    child.sizable->setGeometry(childGeometry);
   }
 }
 
-bool FixedLayout::visible() {
+bool FixedLayout::visible() const {
   if(layout()) return state.visible && layout()->visible();
   return state.visible;
 }

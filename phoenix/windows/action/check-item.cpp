@@ -1,9 +1,5 @@
 namespace phoenix {
 
-bool pCheckItem::checked() {
-  return checkItem.state.checked;
-}
-
 void pCheckItem::setChecked(bool checked) {
   if(parentMenu) CheckMenuItem(parentMenu->p.hmenu, id, checked ? MF_CHECKED : MF_UNCHECKED);
 }

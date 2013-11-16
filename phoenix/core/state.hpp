@@ -5,7 +5,7 @@ struct Application::State {
 
 struct Timer::State {
   bool enabled = false;
-  unsigned milliseconds = 0;
+  unsigned interval = 0;
 };
 
 struct BrowserWindow::State {
@@ -103,12 +103,27 @@ struct Canvas::State {
 
 struct CheckButton::State {
   bool checked = false;
+  nall::image image = {0, 32, 255u << 24, 255u << 16, 255u << 8, 255u << 0};
+  Orientation orientation = Orientation::Horizontal;
+  string text;
+};
+
+struct CheckLabel::State {
+  bool checked = false;
   string text;
 };
 
 struct ComboButton::State {
   unsigned selection = 0;
   vector<string> text;
+};
+
+struct Console::State {
+};
+
+struct Frame::State {
+  Layout* layout = nullptr;
+  string text;
 };
 
 struct HexEdit::State {
@@ -155,7 +170,22 @@ struct ProgressBar::State {
 struct RadioButton::State {
   bool checked = true;
   nall::group<RadioButton> group;
+  nall::image image = {0, 32, 255u << 24, 255u << 16, 255u << 8, 255u << 0};
+  Orientation orientation = Orientation::Horizontal;
   string text;
+};
+
+struct RadioLabel::State {
+  bool checked = true;
+  nall::group<RadioLabel> group;
+  string text;
+};
+
+struct TabFrame::State {
+  vector<nall::image> image;
+  vector<Layout*> layout;
+  unsigned selection = 0;
+  lstring text;
 };
 
 struct TextEdit::State {

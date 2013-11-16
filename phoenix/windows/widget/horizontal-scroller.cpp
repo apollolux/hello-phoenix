@@ -4,10 +4,6 @@ Size pHorizontalScroller::minimumSize() {
   return {0, 18};
 }
 
-unsigned pHorizontalScroller::position() {
-  return GetScrollPos(hwnd, SB_CTL);
-}
-
 void pHorizontalScroller::setLength(unsigned length) {
   length += (length == 0);
   SetScrollRange(hwnd, SB_CTL, 0, length - 1, TRUE);

@@ -47,6 +47,7 @@ void pWidget::setGeometry(Geometry geometry) {
     [cocoaView setFrame:NSMakeRect(geometry.x, windowHeight - geometry.y - geometry.height, geometry.width, geometry.height)];
     [[cocoaView superview] setNeedsDisplay:YES];
   }
+  if(widget.onSize) widget.onSize();
 }
 
 void pWidget::setVisible(bool visible) {

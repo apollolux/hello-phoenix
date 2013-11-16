@@ -94,7 +94,7 @@ public:
   QTimer* qtTimer;
 
   void setEnabled(bool enabled);
-  void setInterval(unsigned milliseconds);
+  void setInterval(unsigned interval);
 
   pTimer(Timer& timer) : pObject(timer), timer(timer) {}
   void constructor();
@@ -222,7 +222,6 @@ public:
   CheckItem& checkItem;
   QAction* qtAction;
 
-  bool checked();
   void setChecked(bool checked);
   void setText(string text);
 
@@ -242,7 +241,6 @@ public:
   QAction* qtAction;
   QActionGroup* qtGroup;
 
-  bool checked();
   void setChecked();
   void setGroup(const group<RadioItem>& group);
   void setText(string text);
@@ -282,7 +280,7 @@ struct pWidget : public pSizable {
   void setEnabled(bool enabled);
   void setFocused();
   void setFont(string font);
-  void setGeometry(Geometry geometry);
+  virtual void setGeometry(Geometry geometry);
   void setVisible(bool visible);
 
   pWidget(Widget& widget) : pSizable(widget), widget(widget) {}
@@ -348,14 +346,34 @@ struct pCheckButton : public QObject, public pWidget {
 
 public:
   CheckButton& checkButton;
-  QCheckBox* qtCheckButton;
+  QToolButton* qtCheckButton;
 
-  bool checked();
+  Size minimumSize();
+  void setChecked(bool checked);
+  void setImage(const image& image, Orientation orientation);
+  void setText(string text);
+
+  pCheckButton(CheckButton& checkButton) : pWidget(checkButton), checkButton(checkButton) {}
+  void constructor();
+  void destructor();
+  void orphan();
+
+public slots:
+  void onToggle(bool checked);
+};
+
+struct pCheckLabel : public QObject, public pWidget {
+  Q_OBJECT
+
+public:
+  CheckLabel& checkLabel;
+  QCheckBox* qtCheckLabel;
+
   Size minimumSize();
   void setChecked(bool checked);
   void setText(string text);
 
-  pCheckButton(CheckButton& checkButton) : pWidget(checkButton), checkButton(checkButton) {}
+  pCheckLabel(CheckLabel& checkLabel) : pWidget(checkLabel), checkLabel(checkLabel) {}
   void constructor();
   void destructor();
   void orphan();
@@ -372,12 +390,12 @@ public:
   QComboBox* qtComboButton;
 
   void append(string text);
-  void modify(unsigned row, string text);
-  void remove(unsigned row);
   Size minimumSize();
+  void remove(unsigned selection);
   void reset();
   unsigned selection();
-  void setSelection(unsigned row);
+  void setSelection(unsigned selection);
+  void setText(unsigned selection, string text);
 
   pComboButton(ComboButton& comboButton) : pWidget(comboButton), comboButton(comboButton) {}
   void constructor();
@@ -386,6 +404,45 @@ public:
 
 public slots:
   void onChange();
+};
+
+struct pConsole : public QObject, public pWidget {
+  Q_OBJECT
+
+public:
+  Console& console;
+  struct QtConsole : public QTextEdit {
+    pConsole& self;
+    void keyPressEvent(QKeyEvent*);
+    void keyPressEventAcknowledge(QKeyEvent*);
+    QtConsole(pConsole& self) : self(self) {}
+  };
+  QtConsole* qtConsole;
+
+  void print(string text);
+  void reset();
+
+  pConsole(Console& console) : pWidget(console), console(console) {}
+  void constructor();
+  void destructor();
+  void orphan();
+  void keyPressEvent(QKeyEvent*);
+};
+
+struct pFrame : public QObject, public pWidget {
+  Q_OBJECT
+
+public:
+  Frame& frame;
+  QGroupBox* qtFrame;
+
+  void setGeometry(Geometry geometry);
+  void setText(string text);
+
+  pFrame(Frame& frame) : pWidget(frame), frame(frame) {}
+  void constructor();
+  void destructor();
+  void orphan();
 };
 
 struct pHexEdit : public QObject, public pWidget {
@@ -397,11 +454,17 @@ public:
     pHexEdit& self;
     void keyPressEvent(QKeyEvent*);
     void keyPressEventAcknowledge(QKeyEvent*);
+    void wheelEvent(QWheelEvent*);
     QtHexEdit(pHexEdit& self) : self(self) {}
+  };
+  struct QtHexEditScrollBar : public QScrollBar {
+    pHexEdit& self;
+    bool event(QEvent*);
+    QtHexEditScrollBar(pHexEdit& self) : QScrollBar(Qt::Vertical), self(self) {}
   };
   QtHexEdit* qtHexEdit;
   QHBoxLayout* qtLayout;
-  QScrollBar* qtScroll;
+  QtHexEditScrollBar* qtScroll;
 
   void setColumns(unsigned columns);
   void setLength(unsigned length);
@@ -414,6 +477,9 @@ public:
   void destructor();
   void orphan();
   void keyPressEvent(QKeyEvent*);
+  signed rows();
+  signed rowsScrollable();
+  void scrollTo(signed position);
 
 public slots:
   void onScroll();
@@ -427,7 +493,6 @@ public:
   QScrollBar* qtScroller;
 
   Size minimumSize();
-  unsigned position();
   void setLength(unsigned length);
   void setPosition(unsigned position);
 
@@ -448,7 +513,6 @@ public:
   QSlider* qtSlider;
 
   Size minimumSize();
-  unsigned position();
   void setLength(unsigned length);
   void setPosition(unsigned position);
 
@@ -505,19 +569,16 @@ public:
 
   void append(const lstring& text);
   void autoSizeColumns();
-  bool checked(unsigned row);
-  void modify(unsigned row, const lstring& text);
-  void remove(unsigned row);
+  void remove(unsigned selection);
   void reset();
-  bool selected();
-  unsigned selection();
   void setCheckable(bool checkable);
-  void setChecked(unsigned row, bool checked);
+  void setChecked(unsigned selection, bool checked);
   void setHeaderText(const lstring& text);
   void setHeaderVisible(bool visible);
-  void setImage(unsigned row, unsigned column, const nall::image& image);
+  void setImage(unsigned selection, unsigned position, const image& image);
   void setSelected(bool selected);
-  void setSelection(unsigned row);
+  void setSelection(unsigned selection);
+  void setText(unsigned selection, unsigned position, string text);
 
   pListView(ListView& listView) : pWidget(listView), listView(listView) {}
   void constructor();
@@ -543,17 +604,40 @@ struct pProgressBar : public pWidget {
   void orphan();
 };
 
+struct pRadioLabel : public QObject, public pWidget {
+  Q_OBJECT
+
+public:
+  RadioLabel& radioLabel;
+  QRadioButton* qtRadioLabel;
+
+  bool checked();
+  Size minimumSize();
+  void setChecked();
+  void setGroup(const group<RadioLabel>& group);
+  void setText(string text);
+
+  pRadioLabel(RadioLabel& radioLabel) : pWidget(radioLabel), radioLabel(radioLabel) {}
+  pRadioLabel& parent();
+  void constructor();
+  void destructor();
+  void orphan();
+
+public slots:
+  void onActivate();
+};
+
 struct pRadioButton : public QObject, public pWidget {
   Q_OBJECT
 
 public:
   RadioButton& radioButton;
-  QRadioButton* qtRadioButton;
+  QToolButton* qtRadioButton;
 
-  bool checked();
   Size minimumSize();
   void setChecked();
   void setGroup(const group<RadioButton>& group);
+  void setImage(const image& image, Orientation orientation);
   void setText(string text);
 
   pRadioButton(RadioButton& radioButton) : pWidget(radioButton), radioButton(radioButton) {}
@@ -564,6 +648,30 @@ public:
 
 public slots:
   void onActivate();
+};
+
+struct pTabFrame : public QObject, public pWidget {
+  Q_OBJECT
+
+public:
+  TabFrame& tabFrame;
+  QTabWidget* qtTabFrame;
+
+  void append(string text, const image& image);
+  void remove(unsigned selection);
+  void setGeometry(Geometry geometry);
+  void setImage(unsigned selection, const image& image);
+  void setSelection(unsigned selection);
+  void setText(unsigned selection, string text);
+
+  pTabFrame(TabFrame& tabFrame) : pWidget(tabFrame), tabFrame(tabFrame) {}
+  void constructor();
+  void destructor();
+  void orphan();
+  void synchronizeLayout();
+
+public slots:
+  void onChange(int selection);
 };
 
 struct pTextEdit : public QObject, public pWidget {
@@ -596,7 +704,6 @@ public:
   QScrollBar* qtScroller;
 
   Size minimumSize();
-  unsigned position();
   void setLength(unsigned length);
   void setPosition(unsigned position);
 
@@ -617,7 +724,6 @@ public:
   QSlider* qtSlider;
 
   Size minimumSize();
-  unsigned position();
   void setLength(unsigned length);
   void setPosition(unsigned position);
 

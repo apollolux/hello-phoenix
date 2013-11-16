@@ -16,15 +16,18 @@ void Win::init() {
 		mHelpAbout.setText("About...");
 	lMain.setMargin(5);
 	lblText.setText("Hello world!");
+	lblT2.setText("Hello tabs!");
+	lblT3.setText("Hello phoenix!");
 	setStatusText({
 		"Hello world!",
 		" ",
 		"What's up?"
 	});
-	browser.setParent(*this).setPath("").setFilters("All files (*)");
+	//browser.setParent(*this).setPath("").setFilters("All files (*)");
 	/** menu methods **/
 	mFileOpen.onActivate = [&] {
-		string fn = browser.open();
+		string fn = BrowserWindow().setParent(*this).setPath("./").setFilters("All files (*)").open();
+		//string fn = browser.open();
 		if (!fn.empty()) openFile(fn);
 	};
 	mFileQuit.onActivate = &Application::quit;
@@ -70,10 +73,19 @@ void Win::reflowStatic() {
 		mFile.append(mFileQuit);
 	append(mHelp);
 		mHelp.append(mHelpAbout);
+	lTabbed.append("First");
+	lTabbed.append("Second");
+	lTabbed.append("Third");
 	setMenuVisible();
 	setStatusVisible();
 }
 void Win::reflow() {
 	append(lMain);
-	lMain.append(lblText, {~0, ~0}, 5);
+	lMain.append(lTabbed, {~0, ~0});
+		lTab1.append(lblText, {~0, ~0}, 5);
+		lTabbed.setLayout(0, lTab1);
+		lTab2.append(lblT2, {~0, ~0}, 5);
+		lTabbed.setLayout(1, lTab2);
+		lTab3.append(lblT3, {~0, ~0}, 5);
+		lTabbed.setLayout(2, lTab3);
 }

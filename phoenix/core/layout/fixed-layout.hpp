@@ -1,7 +1,7 @@
 struct FixedLayout : Layout {
   void append(Sizable& sizable, Geometry geometry);
   void append(Sizable& sizable);
-  bool enabled();
+  bool enabled() const;
   Size minimumSize();
   void remove(Sizable& sizable);
   void reset();
@@ -9,7 +9,7 @@ struct FixedLayout : Layout {
   void setGeometry(Geometry geometry);
   void setVisible(bool visible = true);
   void synchronizeLayout();
-  bool visible();
+  bool visible() const;
   FixedLayout();
   ~FixedLayout();
 

@@ -4,7 +4,7 @@
   if(self = [super initWithFrame:NSMakeRect(0, 0, 0, 0)]) {
     canvas = &canvasReference;
     [self setEditable:NO];  //disable image drag-and-drop functionality
-    NSTrackingArea *area = [[[NSTrackingArea alloc] initWithRect:[self frame]
+    NSTrackingArea* area = [[[NSTrackingArea alloc] initWithRect:[self frame]
       options:NSTrackingMouseMoved | NSTrackingMouseEnteredAndExited | NSTrackingActiveInKeyWindow | NSTrackingInVisibleRect
       owner:self userInfo:nil
     ] autorelease];
@@ -25,7 +25,7 @@
 }
 
 -(void) mouseButton:(NSEvent*)event down:(BOOL)isDown {
-  if(auto &callback = isDown ? canvas->onMousePress : canvas->onMouseRelease) {
+  if(auto& callback = isDown ? canvas->onMousePress : canvas->onMouseRelease) {
     switch([event buttonNumber]) {
     case 0: return callback(phoenix::Mouse::Button::Left);
     case 1: return callback(phoenix::Mouse::Button::Right);

@@ -1,12 +1,8 @@
 namespace phoenix {
 
-static void RadioItem_activate(RadioItem* self) {
+static void RadioItem_activate(GtkCheckMenuItem* gtkCheckMenuItem, RadioItem* self) {
   for(auto& item : self->state.group) item.state.checked = (&item == self);
-  if(self->p.locked == false && self->checked() && self->onActivate) self->onActivate();
-}
-
-bool pRadioItem::checked() {
-  return gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget));
+  if(!self->p.locked && self->checked() && self->onActivate) self->onActivate();
 }
 
 void pRadioItem::setChecked() {
@@ -37,7 +33,7 @@ void pRadioItem::constructor() {
   for(auto& item : radioItem.state.group) {
     gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item.p.widget), item.state.checked);
   }
-  g_signal_connect_swapped(G_OBJECT(widget), "toggled", G_CALLBACK(RadioItem_activate), (gpointer)&radioItem);
+  g_signal_connect(G_OBJECT(widget), "toggled", G_CALLBACK(RadioItem_activate), (gpointer)&radioItem);
 }
 
 void pRadioItem::destructor() {

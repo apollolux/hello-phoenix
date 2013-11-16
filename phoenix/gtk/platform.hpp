@@ -95,7 +95,7 @@ struct pTimer : public pObject {
   Timer& timer;
 
   void setEnabled(bool enabled);
-  void setInterval(unsigned milliseconds);
+  void setInterval(unsigned interval);
 
   pTimer(Timer& timer) : pObject(timer), timer(timer) {}
   void constructor();
@@ -200,7 +200,6 @@ struct pItem : public pAction {
 struct pCheckItem : public pAction {
   CheckItem& checkItem;
 
-  bool checked();
   void setChecked(bool checked);
   void setText(string text);
 
@@ -213,7 +212,6 @@ struct pCheckItem : public pAction {
 struct pRadioItem : public pAction {
   RadioItem& radioItem;
 
-  bool checked();
   void setChecked();
   void setGroup(const group<RadioItem>& group);
   void setText(string text);
@@ -285,12 +283,26 @@ struct pCanvas : public pWidget {
 struct pCheckButton : public pWidget {
   CheckButton& checkButton;
 
-  bool checked();
+  Size minimumSize();
+  void setChecked(bool checked);
+  void setImage(const image& image, Orientation orientation);
+  void setText(string text);
+
+  pCheckButton(CheckButton& checkButton) : pWidget(checkButton), checkButton(checkButton) {}
+  void constructor();
+  void destructor();
+  void orphan();
+  void onToggle();
+};
+
+struct pCheckLabel : public pWidget {
+  CheckLabel& checkLabel;
+
   Size minimumSize();
   void setChecked(bool checked);
   void setText(string text);
 
-  pCheckButton(CheckButton& checkButton) : pWidget(checkButton), checkButton(checkButton) {}
+  pCheckLabel(CheckLabel& checkLabel) : pWidget(checkLabel), checkLabel(checkLabel) {}
   void constructor();
   void destructor();
   void orphan();
@@ -301,14 +313,42 @@ struct pComboButton : public pWidget {
   unsigned itemCounter;
 
   void append(string text);
-  void modify(unsigned row, string text);
-  void remove(unsigned row);
   Size minimumSize();
+  void remove(unsigned selection);
   void reset();
-  unsigned selection();
-  void setSelection(unsigned row);
+  void setSelection(unsigned selection);
+  void setText(unsigned selection, string text);
 
   pComboButton(ComboButton& comboButton) : pWidget(comboButton), comboButton(comboButton) {}
+  void constructor();
+  void destructor();
+  void orphan();
+};
+
+struct pConsole : public pWidget {
+  Console& console;
+  GtkWidget* subWidget;
+  GtkTextBuffer* textBuffer;
+  string command;
+
+  void print(string text);
+  void reset();
+
+  pConsole(Console& console) : pWidget(console), console(console) {}
+  void constructor();
+  void destructor();
+  void orphan();
+  bool keyPress(unsigned scancode, unsigned mask);
+  void seekCursorToEnd();
+};
+
+struct pFrame : public pWidget {
+  Frame& frame;
+
+  void setGeometry(Geometry geometry);
+  void setText(string text);
+
+  pFrame(Frame& frame) : pWidget(frame), frame(frame) {}
   void constructor();
   void destructor();
   void orphan();
@@ -334,8 +374,10 @@ struct pHexEdit : public pWidget {
   void destructor();
   void orphan();
   unsigned cursorPosition();
-  bool keyPress(unsigned scancode);
-  void scroll(unsigned position);
+  bool keyPress(unsigned scancode, unsigned mask);
+  signed rows();
+  signed rowsScrollable();
+  void scroll(signed position);
   void setCursorPosition(unsigned position);
   void setScroll();
   void updateScroll();
@@ -345,7 +387,6 @@ struct pHorizontalScroller : public pWidget {
   HorizontalScroller& horizontalScroller;
 
   Size minimumSize();
-  unsigned position();
   void setLength(unsigned length);
   void setPosition(unsigned position);
 
@@ -359,7 +400,6 @@ struct pHorizontalSlider : public pWidget {
   HorizontalSlider& horizontalSlider;
 
   Size minimumSize();
-  unsigned position();
   void setLength(unsigned length);
   void setPosition(unsigned position);
 
@@ -410,20 +450,17 @@ struct pListView : public pWidget {
 
   void append(const lstring& text);
   void autoSizeColumns();
-  bool checked(unsigned row);
   bool focused();
-  void modify(unsigned row, const lstring& text);
-  void remove(unsigned row);
+  void remove(unsigned selection);
   void reset();
-  bool selected();
-  unsigned selection();
   void setCheckable(bool checkable);
-  void setChecked(unsigned row, bool checked);
+  void setChecked(unsigned selection, bool checked);
   void setHeaderText(const lstring& text);
   void setHeaderVisible(bool visible);
-  void setImage(unsigned row, unsigned column, const nall::image& image);
+  void setImage(unsigned selection, unsigned position, const image& image);
   void setSelected(bool selected);
   void setSelection(unsigned row);
+  void setText(unsigned selection, unsigned position, string text);
 
   pListView(ListView& listView) : pWidget(listView), listView(listView) {}
   void constructor();
@@ -448,18 +485,60 @@ struct pProgressBar : public pWidget {
 struct pRadioButton : public pWidget {
   RadioButton& radioButton;
 
-  bool checked();
   Size minimumSize();
   void setChecked();
   void setGroup(const group<RadioButton>& group);
+  void setImage(const image& image, Orientation orientation);
   void setText(string text);
 
   pRadioButton(RadioButton& radioButton) : pWidget(radioButton), radioButton(radioButton) {}
-  void onActivate();
-  pRadioButton& parent();
   void constructor();
   void destructor();
   void orphan();
+  void onActivate();
+  pRadioButton& parent();
+};
+
+struct pRadioLabel : public pWidget {
+  RadioLabel& radioLabel;
+
+  Size minimumSize();
+  void setChecked();
+  void setGroup(const group<RadioLabel>& group);
+  void setText(string text);
+
+  pRadioLabel(RadioLabel& radioLabel) : pWidget(radioLabel), radioLabel(radioLabel) {}
+  void onActivate();
+  pRadioLabel& parent();
+  void constructor();
+  void destructor();
+  void orphan();
+};
+
+struct pTabFrame : public pWidget {
+  TabFrame& tabFrame;
+  struct Tab {
+    GtkWidget* child;
+    GtkWidget* container;
+    GtkWidget* layout;
+    GtkWidget* image;
+    GtkWidget* title;
+  };
+  vector<Tab> tabs;
+
+  void append(string text, const image& image);
+  void remove(unsigned selection);
+  void setGeometry(Geometry geometry);
+  void setImage(unsigned selection, const image& image);
+  void setSelection(unsigned selection);
+  void setText(unsigned selection, string text);
+
+  pTabFrame(TabFrame& tabFrame) : pWidget(tabFrame), tabFrame(tabFrame) {}
+  void constructor();
+  void destructor();
+  void orphan();
+  void setFont(string font);
+  void synchronizeLayout();
 };
 
 struct pTextEdit : public pWidget {
@@ -484,7 +563,6 @@ struct pVerticalScroller : public pWidget {
   VerticalScroller& verticalScroller;
 
   Size minimumSize();
-  unsigned position();
   void setLength(unsigned length);
   void setPosition(unsigned position);
 
@@ -498,7 +576,6 @@ struct pVerticalSlider : public pWidget {
   VerticalSlider& verticalSlider;
 
   Size minimumSize();
-  unsigned position();
   void setLength(unsigned length);
   void setPosition(unsigned position);
 

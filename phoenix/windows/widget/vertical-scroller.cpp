@@ -4,10 +4,6 @@ Size pVerticalScroller::minimumSize() {
   return {18, 0};
 }
 
-unsigned pVerticalScroller::position() {
-  return GetScrollPos(hwnd, SB_CTL);
-}
-
 void pVerticalScroller::setLength(unsigned length) {
   length += (length == 0);
   SetScrollRange(hwnd, SB_CTL, 0, length - 1, TRUE);

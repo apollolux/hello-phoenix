@@ -24,6 +24,7 @@ void pWidget::setFont(string font) {
 
 void pWidget::setGeometry(Geometry geometry) {
   qtWidget->setGeometry(geometry.x, geometry.y, geometry.width, geometry.height);
+  if(widget.onSize) widget.onSize();
 }
 
 void pWidget::setVisible(bool visible) {

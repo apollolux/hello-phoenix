@@ -267,7 +267,12 @@ static LRESULT CALLBACK Application_windowProc(HWND hwnd, UINT msg, WPARAM wpara
     case WM_CTLCOLORBTN:
     case WM_CTLCOLORSTATIC: {
       Object* object = (Object*)GetWindowLongPtr((HWND)lparam, GWLP_USERDATA);
-      if(object && window.p.brush) {
+      if(object == nullptr) break;
+      if(dynamic_cast<HexEdit*>(object) || dynamic_cast<LineEdit*>(object) || dynamic_cast<TextEdit*>(object)) {
+        //text edit controls, when disabled, use CTLCOLORSTATIC instead of CTLCOLOREDIT
+        //override this behavior: we do not want read-only edit controls to use the parent window background color
+        return DefWindowProc(hwnd, WM_CTLCOLOREDIT, wparam, lparam);
+      } else if(window.p.brush) {
         HDC hdc = (HDC)wparam;
         SetBkColor((HDC)wparam, window.p.brushColor);
         return (INT_PTR)window.p.brush;
@@ -311,8 +316,13 @@ static LRESULT CALLBACK Application_windowProc(HWND hwnd, UINT msg, WPARAM wpara
           if(button.onActivate) button.onActivate();
         } else if(dynamic_cast<CheckButton*>(object)) {
           CheckButton& checkButton = (CheckButton&)*object;
-          checkButton.setChecked(!checkButton.state.checked);
+          checkButton.state.checked = !checkButton.state.checked;
+          checkButton.setChecked(checkButton.state.checked);
           if(checkButton.onToggle) checkButton.onToggle();
+        } else if(dynamic_cast<CheckLabel*>(object)) {
+          CheckLabel& checkLabel = (CheckLabel&)*object;
+          checkLabel.setChecked(!checkLabel.state.checked);
+          if(checkLabel.onToggle) checkLabel.onToggle();
         } else if(dynamic_cast<ComboButton*>(object)) {
           ComboButton& comboButton = (ComboButton&)*object;
           if(HIWORD(wparam) == CBN_SELCHANGE) {
@@ -331,6 +341,12 @@ static LRESULT CALLBACK Application_windowProc(HWND hwnd, UINT msg, WPARAM wpara
           if(radioButton.state.checked == false) {
             radioButton.setChecked();
             if(radioButton.onActivate) radioButton.onActivate();
+          }
+        } else if(dynamic_cast<RadioLabel*>(object)) {
+          RadioLabel& radioLabel = (RadioLabel&)*object;
+          if(radioLabel.state.checked == false) {
+            radioLabel.setChecked();
+            if(radioLabel.onActivate) radioLabel.onActivate();
           }
         } else if(dynamic_cast<TextEdit*>(object)) {
           TextEdit& textEdit = (TextEdit&)*object;
@@ -352,17 +368,21 @@ static LRESULT CALLBACK Application_windowProc(HWND hwnd, UINT msg, WPARAM wpara
         ListView& listView = (ListView&)*object;
         LPNMHDR nmhdr = (LPNMHDR)lparam;
         LPNMLISTVIEW nmlistview = (LPNMLISTVIEW)lparam;
+        unsigned selection = nmlistview->iItem;
 
         if(nmhdr->code == LVN_ITEMCHANGED && (nmlistview->uChanged & LVIF_STATE)) {
           unsigned imagemask = ((nmlistview->uNewState & LVIS_STATEIMAGEMASK) >> 12) - 1;
           if(imagemask == 0 || imagemask == 1) {
-            if(listView.p.locked == false && listView.onToggle) listView.onToggle(nmlistview->iItem);
+            if(listView.p.locked == false && listView.onToggle) {
+              listView.state.checked[selection] = !listView.state.checked[selection];
+              listView.onToggle(selection);
+            }
           } else if((nmlistview->uOldState & LVIS_FOCUSED) && !(nmlistview->uNewState & LVIS_FOCUSED)) {
             listView.p.lostFocus = true;
           } else if(!(nmlistview->uOldState & LVIS_SELECTED) && (nmlistview->uNewState & LVIS_SELECTED)) {
             listView.p.lostFocus = false;
             listView.state.selected = true;
-            listView.state.selection = listView.selection();
+            listView.state.selection = selection;
             if(listView.p.locked == false && listView.onChange) listView.onChange();
           } else if(listView.p.lostFocus == false && listView.selected() == false) {
             listView.p.lostFocus = false;
@@ -388,6 +408,15 @@ static LRESULT CALLBACK Application_windowProc(HWND hwnd, UINT msg, WPARAM wpara
           default:
             return CDRF_DODEFAULT;
           }
+        }
+      } else if(dynamic_cast<TabFrame*>(object)) {
+        TabFrame& tabFrame = (TabFrame&)*object;
+        LPNMHDR nmhdr = (LPNMHDR)lparam;
+
+        if(nmhdr->code == TCN_SELCHANGE) {
+          tabFrame.state.selection = TabCtrl_GetCurSel(tabFrame.p.hwnd);
+          tabFrame.p.synchronizeLayout();
+          if(tabFrame.onChange) tabFrame.onChange();
         }
       }
       break;
@@ -449,14 +478,16 @@ static LRESULT CALLBACK Application_windowProc(HWND hwnd, UINT msg, WPARAM wpara
 
       if(dynamic_cast<HorizontalSlider*>(object)) {
         HorizontalSlider& horizontalSlider = (HorizontalSlider&)*object;
-        if(horizontalSlider.state.position != horizontalSlider.position()) {
-          horizontalSlider.state.position = horizontalSlider.position();
+        unsigned position = SendMessage(horizontalSlider.p.hwnd, TBM_GETPOS, 0, 0);
+        if(horizontalSlider.state.position != position) {
+          horizontalSlider.state.position = position;
           if(horizontalSlider.onChange) horizontalSlider.onChange();
         }
       } else if(dynamic_cast<VerticalSlider*>(object)) {
         VerticalSlider& verticalSlider = (VerticalSlider&)*object;
-        if(verticalSlider.state.position != verticalSlider.position()) {
-          verticalSlider.state.position = verticalSlider.position();
+        unsigned position = SendMessage(verticalSlider.p.hwnd, TBM_GETPOS, 0, 0);
+        if(verticalSlider.state.position != position) {
+          verticalSlider.state.position = position;
           if(verticalSlider.onChange) verticalSlider.onChange();
         }
       }

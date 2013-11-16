@@ -1,7 +1,7 @@
 struct HorizontalLayout : public Layout {
   void append(Sizable& sizable, Size size, unsigned spacing = 0);
   void append(Sizable& sizable);
-  bool enabled();
+  bool enabled() const;
   Size minimumSize();
   void remove(Sizable& sizable);
   void reset();
@@ -11,7 +11,7 @@ struct HorizontalLayout : public Layout {
   void setMargin(unsigned margin);
   void setVisible(bool visible = true);
   void synchronizeLayout();
-  bool visible();
+  bool visible() const;
   HorizontalLayout();
   ~HorizontalLayout();
 

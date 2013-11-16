@@ -1,9 +1,5 @@
 namespace phoenix {
 
-bool pRadioItem::checked() {
-  return radioItem.state.checked;
-}
-
 void pRadioItem::setChecked() {
   for(auto &item : radioItem.state.group) {
     //CheckMenuRadioItem takes: lo, hi, id; checking only id when lo <= id <= hi

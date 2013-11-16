@@ -1,45 +1,56 @@
-#include "phoenix.hpp"
+#include <phoenix/phoenix.hpp>
 using namespace nall;
 using namespace phoenix;
 
-struct Application : Window {
-  Font hexEditFont;
+struct MainWindow : Window {
   VerticalLayout layout;
   HexEdit hexEdit;
 
-  uint8_t buffer[544];
+  uint8_t buffer[16 * 64 + 1];
 
-  void create() {
-    for(unsigned n = 0; n < 544; n++) buffer[n] = n;
+  MainWindow();
+  uint8_t onRead(unsigned addr);
+  void onWrite(unsigned addr, uint8_t data);
+};
 
-    hexEditFont.setFamily("Liberation Mono");
-    hexEditFont.setSize(8);
+MainWindow::MainWindow() {
+  setSmartGeometry({64, 64, 560, 370});  //Windows
+//setSmartGeometry({64, 64, 555, 395});  //GTK+
+//setSmartGeometry({64, 64, 560, 405});  //Qt
+  setTitle("Hex Edit");
 
-    hexEdit.setFont(hexEditFont);
-    hexEdit.onRead = [this](unsigned addr) { return this->buffer[addr]; };
-    hexEdit.onWrite = [this](unsigned addr, uint8_t data) { this->buffer[addr] = data; };
-    hexEdit.setColumns(16);
-    hexEdit.setRows(16);
-    hexEdit.setOffset(0);
-    hexEdit.setLength(544);
+  for(unsigned n = 0; n < sizeof(buffer); n++) buffer[n] = n;
 
-    layout.setMargin(5);
-    layout.append(hexEdit, ~0, ~0);
-    append(layout);
+  layout.setMargin(5);
+  hexEdit.setFont(Font::monospace(8));
+  hexEdit.setColumns(16);
+  hexEdit.setRows(32);
+  hexEdit.setOffset(0);
+  hexEdit.setLength(sizeof(buffer));
 
-    onClose = []() { OS::quit(); };
+  append(layout);
+  layout.append(hexEdit, {~0, ~0});
 
-    setStatusText("Ready");
-    setStatusVisible();
+  onClose = &Application::quit;
+  hexEdit.onRead = {&MainWindow::onRead, this};
+  hexEdit.onWrite = {&MainWindow::onWrite, this};
 
-    setTitle("Hex Edit");
-    setGeometry({ 64, 64, 485, 220 });
-    setVisible();
-  }
-} application;
+  hexEdit.update();
+  setVisible();
+  hexEdit.setFocused();
+}
+
+uint8_t MainWindow::onRead(unsigned addr) {
+  return buffer[addr];
+}
+
+void MainWindow::onWrite(unsigned addr, uint8_t data) {
+  buffer[addr] = data;
+}
 
 int main() {
-  application.create();
-  OS::main();
+  Application::setName("higan");
+  new MainWindow;
+  Application::run();
   return 0;
 }

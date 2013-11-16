@@ -31,6 +31,7 @@ void pWidget::setGeometry(Geometry geometry) {
   unsigned width = (signed)geometry.width <= 0 ? 1U : geometry.width;
   unsigned height = (signed)geometry.height <= 0 ? 1U : geometry.height;
   gtk_widget_set_size_request(gtkWidget, width, height);
+  if(widget.onSize) widget.onSize();
 }
 
 void pWidget::setVisible(bool visible) {

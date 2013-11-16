@@ -9,6 +9,9 @@ objects := obj/phoenix.o obj/$(application).o
 ifeq ($(platform),win)
   link += -mwindows
   objects += obj/resource.o
+else ifeq ($(platform),windows)
+  link += -mwindows
+  objects += obj/resource.o
 endif
 
 all: $(objects)

@@ -56,8 +56,12 @@
 #endif
 using namespace nall;
 
-int main() {
-  if(auto value = Eval::integer("0x1234")) {
-    print(value(), "\n");
-  }
+int main(int argc, char** argv) {
+  file fp;
+  fp.open("output.bin", file::mode::write);
+  for(unsigned n = 0; n < 32; n++) fp.write(n);
+  fp.close();
+
+  file::truncate("output.bin", 16);
+  return 0;
 }

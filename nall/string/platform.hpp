@@ -3,33 +3,22 @@
 namespace nall {
 
 string activepath() {
-  string result;
-  #if defined(PLATFORM_WINDOWS)
-  wchar_t path[PATH_MAX] = L"";
-  auto unused = _wgetcwd(path, PATH_MAX);
-  result = (const char*)utf8_t(path);
-  result.transform("\\", "/");
-  #else
   char path[PATH_MAX] = "";
   auto unused = getcwd(path, PATH_MAX);
-  result = path;
-  #endif
+  string result = path;
   if(result.empty()) result = ".";
+  result.transform("\\", "/");
   if(result.endswith("/") == false) result.append("/");
   return result;
 }
 
 string realpath(const string& name) {
   string result;
-  #if defined(PLATFORM_WINDOWS)
-  wchar_t path[PATH_MAX] = L"";
-  if(_wfullpath(path, utf16_t(name), PATH_MAX)) result = (const char*)utf8_t(path);
-  result.transform("\\", "/");
-  #else
   char path[PATH_MAX] = "";
   if(::realpath(name, path)) result = path;
-  #endif
   if(result.empty()) result = {activepath(), name};
+  result.transform("\\", "/");
+  if(result.endswith("/") == false) result.append("/");
   return result;
 }
 
@@ -60,7 +49,7 @@ string configpath() {
   SHGetFolderPathW(nullptr, CSIDL_APPDATA | CSIDL_FLAG_CREATE, nullptr, 0, path);
   result = (const char*)utf8_t(path);
   result.transform("\\", "/");
-  #elif defined(PLATFORM_OSX)
+  #elif defined(PLATFORM_MACOSX)
   result = {userpath(), "Library/Application Support/"};
   #else
   result = {userpath(), ".config/"};
@@ -77,7 +66,7 @@ string sharedpath() {
   SHGetFolderPathW(nullptr, CSIDL_COMMON_APPDATA | CSIDL_FLAG_CREATE, nullptr, 0, path);
   result = (const char*)utf8_t(path);
   result.transform("\\", "/");
-  #elif defined(PLATFORM_OSX)
+  #elif defined(PLATFORM_MACOSX)
   result = "/Library/Application Support/";
   #else
   result = "/usr/share/";
