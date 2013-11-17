@@ -4,6 +4,8 @@ using namespace nall;
 #include <phoenix/phoenix.hpp>
 using namespace phoenix;
 
+#include "nthings.hpp"
+
 struct Prog {
 	/** program properties **/
 	string name;	/* app name */
@@ -26,10 +28,12 @@ struct Win : Window {
 	Menu mHelp;
 		Item mHelpAbout;
 	/** layouts **/
-	VerticalLayout lMain, lTab1, lTab2, lTab3;
+	VerticalLayout lMain, lTab1, lTab1a, lTab2, lTab3;
 	Label lblText, lblT2, lblT3;
 	TabFrame lTabbed;
 	/** aux **/
+	Spritesheet sprTabs;
+	Frame fsT1;
 	BrowserWindow browser;	/* file browser for "Open File" functionality */
 	/** proc **/
 	void openFile(const string &fn);
