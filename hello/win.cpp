@@ -1,4 +1,4 @@
-Win::Win() {
+Win::Win() : Window() {
 	init();
 	reflowStatic();
 	reflow();
@@ -6,6 +6,7 @@ Win::Win() {
 
 void Win::openFile(const string &fn) {
 	prog->open(fn);
+	feFile.setPath(fn);
 }
 void Win::init() {
 	/** init settings **/
@@ -30,7 +31,7 @@ void Win::init() {
 	//browser.setParent(*this).setPath("").setFilters("All files (*)");
 	/** menu methods **/
 	mFileOpen.onActivate = [&] {
-		string fn = BrowserWindow().setParent(*this).setPath("./").setFilters("All files (*)").open();
+		string fn = BrowserWindow().setParent(*this).setPath("").setFilters("All files (*)").open();
 		//string fn = browser.open();
 		if (!fn.empty()) openFile(fn);
 	};
@@ -48,7 +49,7 @@ void Win::init() {
 	};
 	/** window methods **/
 	onClose = &Application::quit;
-	onSize = {&Win::reflow, this};
+	onSize = {&Win::resize, this};
 	/**** handle "drag & drop onto window" events ****/
 	setDroppable();
 	onDrop = [&](lstring fns) {
@@ -98,9 +99,19 @@ void Win::reflowStatic() {
 }
 void Win::reflow() {
 	append(lMain);
-	lMain.append(lTabbed, {~0, ~0});
-		lTab1.append(fsT1, {~0, ~0});
-			lTab1a.append(lblText, {~0, 0});
-		lTab2.append(lblT2, {~0, ~0});
-		lTab3.append(lblT3, {~0, ~0});
+	lMain.remove(lTabbed); lMain.remove(feFile);
+	lMain.append(lTabbed, {~0, ~0}, 5);
+		lTab1.remove(fsT1); lTab1.append(fsT1, {~0, ~0});
+			lTab1a.remove(lblText); lTab1a.append(lblText, {~0, 0});
+		lTab2.remove(lblT2); lTab2.append(lblT2, {~0, ~0});
+		lTab3.remove(lblT3); lTab3.append(lblT3, {~0, ~0});
+	lMain.append(feFile, {~0, 0}); feFile.reflow();
+}
+void Win::resize() {
+	/****
+	add some resize handling here
+	maybe make an interface 3 columns instead of 2 if wide enough,
+	or set a tab bar to align left instead of top,
+	or set buttons to only use images when small and image+text when wide
+	****/
 }

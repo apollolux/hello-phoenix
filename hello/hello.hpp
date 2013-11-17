@@ -32,6 +32,7 @@ struct Win : Window {
 	Label lblText, lblT2, lblT3;
 	TabFrame lTabbed;
 	/** aux **/
+	FileEntry feFile;
 	Spritesheet sprTabs;
 	Frame fsT1;
 	BrowserWindow browser;	/* file browser for "Open File" functionality */
@@ -40,6 +41,7 @@ struct Win : Window {
 	void init();
 	void reflowStatic();
 	void reflow();
+	void resize();
 	/** constructors **/
 	Win();
 } *win = nullptr;
