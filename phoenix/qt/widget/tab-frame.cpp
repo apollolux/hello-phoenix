@@ -11,10 +11,17 @@ void pTabFrame::remove(unsigned selection) {
   qtTabFrame->removeTab(selection);
 }
 
+void pTabFrame::setEnabled(bool enabled) {
+  for(auto& layout : tabFrame.state.layout) {
+    if(layout) layout->setEnabled(layout->enabled());
+  }
+  pWidget::setEnabled(enabled);
+}
+
 void pTabFrame::setGeometry(Geometry geometry) {
   pWidget::setGeometry(geometry);
   geometry.x += 1, geometry.width -= 2;
-  geometry.y += 26, geometry.height -= 27;
+  geometry.y += 29, geometry.height -= 30;
   for(auto& layout : tabFrame.state.layout) {
     if(layout == nullptr) continue;
     layout->setGeometry(geometry);
@@ -35,6 +42,13 @@ void pTabFrame::setText(unsigned selection, string text) {
   qtTabFrame->setTabText(selection, QString::fromUtf8(text));
 }
 
+void pTabFrame::setVisible(bool visible) {
+  for(auto& layout : tabFrame.state.layout) {
+    if(layout) layout->setVisible(layout->visible());
+  }
+  pWidget::setVisible(visible);
+}
+
 void pTabFrame::constructor() {
   qtWidget = qtTabFrame = new QTabWidget;
   connect(qtTabFrame, SIGNAL(currentChanged(int)), SLOT(onChange(int)));
@@ -53,10 +67,10 @@ void pTabFrame::orphan() {
 }
 
 void pTabFrame::synchronizeLayout() {
-  for(unsigned n = 0; n < tabFrame.state.layout.size(); n++) {
-    Layout* layout = tabFrame.state.layout[n];
-    if(layout == nullptr) continue;
-    layout->setVisible(n == tabFrame.state.selection);
+  unsigned selection = 0;
+  for(auto& layout : tabFrame.state.layout) {
+    if(layout) layout->setVisible(selection == tabFrame.state.selection);
+    selection++;
   }
 }
 

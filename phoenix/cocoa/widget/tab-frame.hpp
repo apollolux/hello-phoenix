@@ -25,10 +25,12 @@ struct pTabFrame : public pWidget {
 
   void append(string text, const image& image);
   void remove(unsigned selection);
+  void setEnabled(bool enabled);
   void setGeometry(Geometry geometry);
   void setImage(unsigned selection, const image& image);
   void setSelection(unsigned selection);
   void setText(unsigned selection, string text);
+  void setVisible(bool visible);
 
   pTabFrame(TabFrame& tabFrame) : pWidget(tabFrame), tabFrame(tabFrame) {}
   void constructor();

@@ -26,7 +26,7 @@ struct Spritesheet {
 		image ret(im.endian, im.depth, im.alpha.mask, im.red.mask, im.green.mask, im.blue.mask);
 		if (w<=im.width&&h<=im.height) {
 			if (x>=0&&y>=0&&x+w<=im.width&&y+h<=im.height) {
-				ret.allocate(w, h); ret.clear(0);
+				ret.allocate(w, h); ret.fill(0);
 				unsigned _x, _y;
 				for (_y=0; _y<h; ++_y) {
 					uint8_t *dp = ret.data + ret.pitch * _y;
@@ -39,9 +39,9 @@ struct Spritesheet {
 					}
 				}
 			}
-			else {ret.allocate(1,1); ret.clear(0);}
+			else {ret.allocate(1,1); ret.fill(0);}
 		}
-		else {ret.allocate(1,1); ret.clear(0);}
+		else {ret.allocate(1,1); ret.fill(0);}
 		return ret;
 	}
 };
@@ -69,7 +69,7 @@ struct FileEntry : HorizontalLayout {
 		bBrowse.onActivate = [&]() {
 			//MessageWindow::information(Window::None, "TODO: browse for file");
 			string _lastdir = dir(getPath())||basePath;
-			string _file = BrowserWindow().setParent(*window()).setPath("").setFilters("All files (*)").open();
+			string _file = BrowserWindow().setParent(*window()).setPath(_lastdir).setFilters(filter).open();
 			if (!_file.empty()) {
 				setPath(_file);
 				cb(getPath());

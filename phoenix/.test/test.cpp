@@ -2,111 +2,134 @@
 using namespace nall;
 using namespace phoenix;
 
-struct MainWindow : Window {
+struct TestWindow : Window {
   VerticalLayout layout;
-  TabFrame tabFrame;
-  VerticalLayout tabLayout0;
-    ListView listView;
-  VerticalLayout tabLayout1;
-    HorizontalLayout checkLayout;
-      CheckButton button1;
-      CheckButton button2;
-    HorizontalLayout radioLayout;
-      RadioButton button3;
-      RadioButton button4;
-      RadioButton button5;
-  VerticalLayout tabLayout2;
-    Canvas canvas;
   Frame frame;
   VerticalLayout frameLayout;
-    Button button;
+  TextEdit label;
+
+  TestWindow() {
+    setWindowGeometry({900, 64, 480, 320});
+    layout.setMargin(5);
+    frame.setText("Frame");
+    label.setText("Label\nText");
+    frameLayout.setMargin(5);
+    frameLayout.append(label, {~0, ~0});
+    frame.setLayout(frameLayout);
+    layout.append(frame, {~0, ~0});
+    append(layout);
+    setVisible();
+  }
+};
+
+struct MainWindow : Window {
+  VerticalLayout layout;
+    TabFrame tabFrame;
+      VerticalLayout tabLayout0;
+        TabFrame innerFrame;
+          VerticalLayout innerLayout0;
+            ListView listView;
+            Frame frame;
+              VerticalLayout frameLayout;
+                TextEdit frameLabel;
+      VerticalLayout tabLayout1;
+        Canvas canvas;
 
   MainWindow() {
-    setWindowGeometry({64, 64, 800, 480});
+    setWindowGeometry({64, 64, 800, 640});
     setTitle("TabFrame Demo");
 
     layout.setMargin(5);
 
     tabFrame.append("Famicom");
-    tabFrame.append("Super Famicom", {"folder.png"});
+    tabFrame.append("Super Famicom");
     tabFrame.append("Game Boy");
     tabFrame.append("Game Boy Color");
     tabFrame.append("Game Boy Advance");
 
-    listView.setCheckable(true);
-    listView.setHeaderVisible(true);
-    listView.setHeaderText({"Name", "Region"});
-    listView.append({"Chrono Trigger", "USA"});
-    listView.append({"Super Metroid", "Japan"});
-    listView.append({"Wanderers from Ys", "Europe"});
-    listView.autoSizeColumns();
-    listView.setSelection(1);
-    listView.onToggle = [&](unsigned selection) { print("check: ", selection, " = ", listView.checked(selection), "\n"); };
-    listView.onActivate = [&]() { print("activate: ", listView.selection(), "\n"); };
-    listView.onChange = [&]() { print("change: ", listView.selection(), "\n"); };
-
     tabLayout0.setMargin(5);
-    tabLayout0.append(listView, {~0, ~0});
-    tabFrame.setLayout(0, tabLayout0);
 
-    button1.setImage({"folder.png"}, Orientation::Vertical);
-    button2.setImage({"folder.png"}, Orientation::Horizontal);
-    button3.setImage({"folder.png"}, Orientation::Vertical);
-    button1.setText("Button 1");
-    button2.setText("Button 2");
-    button3.setText("Button 3");
-    button4.setText("Button 4");
-    button5.setText("Button 5");
-    button1.onToggle = [&]() { print(button1.checked(), "\n"); };
-    button2.onToggle = [&]() { print(button2.checked(), "\n"); };
-    button3.onActivate = [&]() { print("3\n"); };
-    button4.onActivate = [&]() { print("4\n"); };
-    button5.onActivate = [&]() { print("5\n"); };
+    innerFrame.append("First");
+    innerFrame.append("Second");
 
-    RadioButton::group(button3, button4, button5);
+    innerLayout0.setMargin(5);
 
-    tabLayout1.setMargin(5);
-    tabLayout1.append(checkLayout, {~0, 0}, 5);
-    checkLayout.append(button1, {0, 0}, 5);
-    checkLayout.append(button2, {0, 0}, 5);
-    tabLayout1.append(radioLayout, {~0, 0}, 5);
-    radioLayout.append(button3, {0, 0}, 5);
-    radioLayout.append(button4, {0, 0}, 5);
-    radioLayout.append(button5, {0, 0}, 5);
-    tabFrame.setLayout(1, tabLayout1);
-
-    tabLayout2.setMargin(5);
-    tabLayout2.append(canvas, {~0, ~0});
-    tabFrame.setLayout(2, tabLayout2);
-
-    canvas.onSize = [&]() {
-      Geometry geometry = canvas.geometry();
-      canvas.setSize(geometry.size());
-      canvas.fill({255, 0, 0}, {0, 255, 0}, {0, 0, 255}, {255, 255, 0});
-      canvas.update();
-    };
-
-    tabFrame.setSelection(1);
-
-    layout.append(tabFrame, {~0, ~0}, 5);
+    listView.append("Chrono Trigger");
+    listView.append("Super Metroid");
+    listView.append("Wanderers from Ys");
 
     frame.setText("Information");
-    button.setImage({"image.png"});
-    button.setText("Button");
-    frameLayout.setMargin(5);
-    frameLayout.append(button, {~0, ~0});
-    frame.setLayout(frameLayout);
-    layout.append(frame, {~0, 100});
 
+    frameLayout.setMargin(5);
+
+    frameLabel.setText("Title: Chrono Trigger\nPublisher: Nintendo");
+
+    tabLayout1.setMargin(5);
+
+    canvas.setImage({"higan.png"});
+    canvas.setSize({512, 512});
+
+    //
+
+    innerLayout0.append(listView, {~0, ~0}, 5);
+    frameLayout.append(frameLabel, {~0, ~0});
+    frame.setLayout(frameLayout);
+    innerLayout0.append(frame, {~0, 80});
+    innerFrame.setLayout(0, innerLayout0);
+    tabLayout0.append(innerFrame, {~0, ~0});
+    tabFrame.setLayout(0, tabLayout0);
+    tabLayout1.append(canvas, {~0, ~0});
+    tabFrame.setLayout(1, tabLayout1);
+    layout.append(tabFrame, {~0, ~0});
     append(layout);
 
     onClose = &Application::quit;
     setVisible();
+
+    #if 0
+    animation.onActivate = [&] {
+      if(phase == 4) return;
+
+      nall::image backdrop;
+      backdrop.allocate(512, 512);
+      backdrop.fill(0);
+      nall::image logo("higan.png");
+
+      if(phase == 0) {
+        logo.crop(offset, offset, 256, 256);
+        backdrop.impose(image::blend::sourceColor, offset, offset, logo, 0, 0, 256, 256);
+
+        if(++offset == 256) phase = 1;
+      } else if(phase == 1) {
+        if(--offset == 128) phase = 2;
+
+        logo.crop(offset, offset, 256, 256);
+        backdrop.impose(image::blend::sourceColor, offset, offset, logo, 0, 0, 256, 256);
+      } else if(phase == 2) {
+        if(--offset == 0) phase = 3;
+
+        unsigned size = (256 - offset) * 2;
+        logo.crop(offset, offset, size, size);
+        backdrop.impose(image::blend::sourceColor, offset, offset, logo, 0, 0, size, size);
+      } else if(phase == 3) {
+        backdrop.verticalGradient((offset << 24) + 255, 0);
+        backdrop.impose(image::blend::sourceAlpha, 0, 0, logo, 0, 0, 512, 512);
+
+        if(++offset == 256) phase = 4;
+      }
+
+      canvas.setImage(backdrop);
+    };
+
+    animation.setInterval(1);
+    animation.setEnabled();
+    #endif
   }
 };
 
 int main() {
   new MainWindow;
+  new TestWindow;
   Application::run();
   return 0;
 }

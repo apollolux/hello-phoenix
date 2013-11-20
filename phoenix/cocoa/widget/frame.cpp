@@ -13,6 +13,11 @@
 
 namespace phoenix {
 
+void pFrame::setEnabled(bool enabled) {
+  if(frame.state.layout) frame.state.layout->setEnabled(frame.state.layout->enabled());
+  pWidget::setEnabled(enabled);
+}
+
 void pFrame::setFont(string font) {
   @autoreleasepool {
     [cocoaView setTitleFont:pFont::cocoaFont(font)];
@@ -36,6 +41,11 @@ void pFrame::setText(string text) {
   @autoreleasepool {
     [cocoaView setTitle:[NSString stringWithUTF8String:text]];
   }
+}
+
+void pFrame::setVisible(bool visible) {
+  if(frame.state.layout) frame.state.layout->setVisible(frame.state.layout->visible());
+  pWidget::setVisible(visible);
 }
 
 void pFrame::constructor() {

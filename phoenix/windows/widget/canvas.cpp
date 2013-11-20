@@ -56,28 +56,46 @@ void pCanvas::setDroppable(bool droppable) {
   DragAcceptFiles(hwnd, droppable);
 }
 
-void pCanvas::setSize(Size size) {
-  delete[] data;
-  data = new uint32_t[size.width * size.height];
+void pCanvas::setGeometry(Geometry geometry) {
+  if(canvas.state.width == 0 || canvas.state.height == 0) rasterize();
+  unsigned width = canvas.state.width;
+  unsigned height = canvas.state.height;
+  if(width == 0) width = widget.state.geometry.width;
+  if(height == 0) height = widget.state.geometry.height;
+
+  if(width < geometry.width) {
+    geometry.x += (geometry.width - width) / 2;
+    geometry.width = width;
+  }
+
+  if(height < geometry.height) {
+    geometry.y += (geometry.height - height) / 2;
+    geometry.height = height;
+  }
+
+  pWidget::setGeometry(geometry);
 }
 
-void pCanvas::update() {
-  memcpy(data, canvas.state.data, canvas.state.width * canvas.state.height * sizeof(uint32_t));
-  InvalidateRect(hwnd, 0, false);
+void pCanvas::setMode(Canvas::Mode mode) {
+  rasterize(), redraw();
+}
+
+void pCanvas::setSize(Size size) {
+  rasterize(), redraw();
 }
 
 void pCanvas::constructor() {
-  data = new uint32_t[canvas.state.width * canvas.state.height];
-  memcpy(data, canvas.state.data, canvas.state.width * canvas.state.height * sizeof(uint32_t));
   hwnd = CreateWindow(L"phoenix_canvas", L"", WS_CHILD, 0, 0, 0, 0, parentWindow->p.hwnd, (HMENU)id, GetModuleHandle(0), 0);
   SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)&canvas);
   setDroppable(canvas.state.droppable);
+  rasterize();
   synchronize();
 }
 
 void pCanvas::destructor() {
+  release();
+  if(colorBrush) { DeleteObject(colorBrush); colorBrush = nullptr; }
   DestroyWindow(hwnd);
-  delete[] data;
 }
 
 void pCanvas::orphan() {
@@ -85,25 +103,98 @@ void pCanvas::orphan() {
   constructor();
 }
 
-void pCanvas::paint() {
-  RECT rc;
-  GetClientRect(hwnd, &rc);
-  unsigned width = canvas.state.width, height = canvas.state.height;
+uint32_t pCanvas::getBackgroundColor() {
+  uint32_t backgroundColor = GetSysColor(COLOR_3DFACE);
+  if(((Sizable&)widget).state.window) backgroundColor = ((Sizable&)widget).state.window->backgroundColor().rgb();
+  return backgroundColor;
+}
 
-  BITMAPINFO bmi;
-  memset(&bmi, 0, sizeof(BITMAPINFO));
-  bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-  bmi.bmiHeader.biPlanes = 1;
-  bmi.bmiHeader.biBitCount = 32;
-  bmi.bmiHeader.biCompression = BI_RGB;
-  bmi.bmiHeader.biWidth = width;
-  bmi.bmiHeader.biHeight = -height;  //GDI stores bitmaps upside now; negative height flips bitmap
-  bmi.bmiHeader.biSizeImage = sizeof(uint32_t) * width * height;
+void pCanvas::paint() {
+  if(surfaceBackgroundColor != getBackgroundColor()) rasterize();
 
   PAINTSTRUCT ps;
   BeginPaint(hwnd, &ps);
-  SetDIBitsToDevice(ps.hdc, 0, 0, width, height, 0, 0, 0, height, (void*)data, &bmi, DIB_RGB_COLORS);
+
+  if(canvas.state.mode == Canvas::Mode::Color) {
+    FillRect(ps.hdc, &ps.rcPaint, colorBrush);
+  } else {
+    uint32_t* data = surface;
+    unsigned width = surfaceWidth;
+    unsigned height = surfaceHeight;
+
+    if(canvas.state.mode == Canvas::Mode::Data) {
+      if(width != canvas.state.width || height != canvas.state.height) return;
+      data = canvas.state.data;
+    }
+
+    if(data) {
+      BITMAPINFO bmi;
+      memset(&bmi, 0, sizeof(BITMAPINFO));
+      bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+      bmi.bmiHeader.biPlanes = 1;
+      bmi.bmiHeader.biBitCount = 32;
+      bmi.bmiHeader.biCompression = BI_RGB;
+      bmi.bmiHeader.biWidth = width;
+      bmi.bmiHeader.biHeight = -height;  //GDI stores bitmaps upside now; negative height flips bitmap
+      bmi.bmiHeader.biSizeImage = width * height * sizeof(uint32_t);
+
+      SetDIBitsToDevice(ps.hdc, 0, 0, width, height, 0, 0, 0, height, (void*)data, &bmi, DIB_RGB_COLORS);
+    }
+  }
   EndPaint(hwnd, &ps);
+}
+
+void pCanvas::rasterize() {
+  unsigned width = canvas.state.width;
+  unsigned height = canvas.state.height;
+  unsigned backgroundColor = getBackgroundColor();
+  if(width == 0) width = widget.state.geometry.width;
+  if(height == 0) height = widget.state.geometry.height;
+
+  if(canvas.state.mode != Canvas::Mode::Color && canvas.state.mode != Canvas::Mode::Data) {
+    if(width != surfaceWidth || height != surfaceHeight) release();
+    if(!surface) surface = new uint32_t[width * height];
+  }
+
+  if(canvas.state.mode == Canvas::Mode::Color) {
+    if(colorBrush) DeleteObject(colorBrush);
+    colorBrush = CreateSolidBrush(RGB(canvas.state.color.red, canvas.state.color.green, canvas.state.color.blue));
+  }
+
+  if(canvas.state.mode == Canvas::Mode::Gradient) {
+    nall::image image;
+    image.allocate(width, height);
+    image.gradient(
+      canvas.state.gradient[0].argb(), canvas.state.gradient[1].argb(), canvas.state.gradient[2].argb(), canvas.state.gradient[3].argb()
+    );
+    memcpy(surface, image.data, image.size);
+  }
+
+  if(canvas.state.mode == Canvas::Mode::Image) {
+    nall::image image = canvas.state.image;
+    image.scale(width, height);
+    image.transform(0, 32, 255u << 24, 255u << 16, 255u << 8, 255u << 0);
+    image.alphaBlend(backgroundColor);
+    memcpy(surface, image.data, image.size);
+  }
+
+  surfaceWidth = width;
+  surfaceHeight = height;
+  surfaceBackgroundColor = backgroundColor;
+}
+
+void pCanvas::redraw() {
+  InvalidateRect(hwnd, 0, false);
+}
+
+void pCanvas::release() {
+  if(surface) {
+    delete[] surface;
+    surface = nullptr;
+    surfaceWidth = 0;
+    surfaceHeight = 0;
+    surfaceBackgroundColor = 0;
+  }
 }
 
 }

@@ -11,11 +11,6 @@ void VerticalLayout::append(Sizable& sizable) {
   if(window()) window()->synchronizeLayout();
 }
 
-bool VerticalLayout::enabled() const {
-  if(layout()) return state.enabled && layout()->enabled();
-  return state.enabled;
-}
-
 Size VerticalLayout::minimumSize() {
   unsigned width = 0, height = 0;
 
@@ -43,7 +38,7 @@ void VerticalLayout::remove(Sizable& sizable) {
   for(unsigned n = 0; n < children.size(); n++) {
     if(children[n].sizable == &sizable) {
       if(dynamic_cast<Layout*>(children[n].sizable)) {
-        Layout *layout = (Layout*)children[n].sizable;
+        Layout* layout = (Layout*)children[n].sizable;
         layout->reset();
       }
       children.remove(n);
@@ -66,9 +61,9 @@ void VerticalLayout::setAlignment(double alignment) {
 }
 
 void VerticalLayout::setEnabled(bool enabled) {
-  state.enabled = enabled;
+  Sizable::state.enabled = enabled;
   for(auto& child : children) {
-    child.sizable->setEnabled(dynamic_cast<Widget*>(child.sizable) ? child.sizable->enabled() : enabled);
+    child.sizable->setEnabled(child.sizable->enabled());
   }
 }
 
@@ -117,26 +112,14 @@ void VerticalLayout::setMargin(unsigned margin) {
 }
 
 void VerticalLayout::setVisible(bool visible) {
-  state.visible = visible;
+  Sizable::state.visible = visible;
   for(auto& child : children) {
-    child.sizable->setVisible(dynamic_cast<Widget*>(child.sizable) ? child.sizable->visible() : visible);
+    child.sizable->setVisible(child.sizable->visible());
   }
 }
 
 void VerticalLayout::synchronizeLayout() {
   for(auto& child : children) Layout::append(*child.sizable);
-}
-
-bool VerticalLayout::visible() const {
-  if(layout()) return state.visible && layout()->visible();
-  return state.visible;
-}
-
-VerticalLayout::VerticalLayout() {
-  state.alignment = 0.0;
-  state.enabled = true;
-  state.margin = 0;
-  state.visible = true;
 }
 
 VerticalLayout::~VerticalLayout() {

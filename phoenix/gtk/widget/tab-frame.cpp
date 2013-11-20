@@ -10,7 +10,7 @@ void pTabFrame::append(string text, const image& image) {
   unsigned selection = tabFrame.state.text.size() - 1;
 
   Tab tab;
-  tab.child = gtk_label_new("");
+  tab.child = gtk_fixed_new();
   tab.container = gtk_hbox_new(false, 0);
   tab.image = gtk_image_new();
   tab.title = gtk_label_new(text);
@@ -28,9 +28,24 @@ void pTabFrame::append(string text, const image& image) {
   if(!image.empty()) setImage(selection, image);
 }
 
+GtkWidget* pTabFrame::container(Widget& widget) {
+  return tabs[GetParentLayout(widget)->state.widgetSelection].child;
+}
+
+Size pTabFrame::containerOffset() {
+  return {widget.state.geometry.x + 3, widget.state.geometry.y + 28};
+}
+
 void pTabFrame::remove(unsigned selection) {
   tabs.remove(selection);
   gtk_notebook_remove_page(GTK_NOTEBOOK(gtkWidget), selection);
+}
+
+void pTabFrame::setEnabled(bool enabled) {
+  for(auto& layout : tabFrame.state.layout) {
+    if(layout) layout->setEnabled(layout->enabled());
+  }
+  pWidget::setEnabled(enabled);
 }
 
 void pTabFrame::setGeometry(Geometry geometry) {
@@ -47,7 +62,7 @@ void pTabFrame::setGeometry(Geometry geometry) {
 void pTabFrame::setImage(unsigned selection, const image& image) {
   nall::image copy = image;
   unsigned size = pFont::size(widget.state.font, " ").height;
-  copy.scale(size, size, Interpolation::Hermite);
+  copy.scale(size, size);
   GdkPixbuf* pixbuf = CreatePixbuf(copy);
   gtk_image_set_from_pixbuf(GTK_IMAGE(tabs[selection].image), pixbuf);
 }
@@ -58,6 +73,13 @@ void pTabFrame::setSelection(unsigned selection) {
 
 void pTabFrame::setText(unsigned selection, string text) {
   gtk_label_set_text(GTK_LABEL(tabs[selection].title), text);
+}
+
+void pTabFrame::setVisible(bool visible) {
+  for(auto& layout : tabFrame.state.layout) {
+    if(layout) layout->setVisible(layout->visible());
+  }
+  pWidget::setVisible(visible);
 }
 
 void pTabFrame::constructor() {
@@ -83,10 +105,10 @@ void pTabFrame::setFont(string font) {
 }
 
 void pTabFrame::synchronizeLayout() {
-  for(unsigned n = 0; n < tabFrame.state.layout.size(); n++) {
-    Layout* layout = tabFrame.state.layout[n];
-    if(layout == nullptr) continue;
-    layout->setVisible(n == tabFrame.state.selection);
+  unsigned selection = 0;
+  for(auto& layout : tabFrame.state.layout) {
+    if(layout) layout->setVisible(selection == tabFrame.state.selection);
+    selection++;
   }
 }
 

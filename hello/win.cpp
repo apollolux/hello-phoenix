@@ -1,7 +1,7 @@
 Win::Win() : Window() {
-	init();
-	reflowStatic();
-	reflow();
+	init();	// initialize static variables
+	reflowStatic();	// initialize static layout
+	reflow();	// update initial layouts
 }
 
 void Win::openFile(const string &fn) {

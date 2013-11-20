@@ -1,5 +1,18 @@
 namespace phoenix {
 
+GtkWidget* pFrame::container(Widget& widget) {
+  return gtk_widget_get_parent(gtkWidget);
+}
+
+Size pFrame::containerOffset() {
+  return {0, 0};
+}
+
+void pFrame::setEnabled(bool enabled) {
+  if(frame.state.layout) frame.state.layout->setEnabled(frame.state.layout->enabled());
+  pWidget::setEnabled(enabled);
+}
+
 void pFrame::setGeometry(Geometry geometry) {
   pWidget::setGeometry(geometry);
   if(frame.state.layout == nullptr) return;
@@ -12,6 +25,11 @@ void pFrame::setGeometry(Geometry geometry) {
 
 void pFrame::setText(string text) {
   gtk_frame_set_label(GTK_FRAME(gtkWidget), text);
+}
+
+void pFrame::setVisible(bool visible) {
+  if(frame.state.layout) frame.state.layout->setVisible(frame.state.layout->visible());
+  pWidget::setVisible(visible);
 }
 
 void pFrame::constructor() {

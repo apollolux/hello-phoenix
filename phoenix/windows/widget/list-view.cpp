@@ -27,7 +27,7 @@ void ImageList_Append(HIMAGELIST imageList, const nall::image& source) {
   auto image = source;
   if(image.empty()) {
     image.allocate(15, 15);
-    image.clear(GetSysColor(COLOR_WINDOW));
+    image.fill(GetSysColor(COLOR_WINDOW));
   }
   image.transform(0, 32, 255u << 24, 255u << 16, 255u << 8, 255u << 0);
   image.scale(15, 15, Interpolation::Linear);

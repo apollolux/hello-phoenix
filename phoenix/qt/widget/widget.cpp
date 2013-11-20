@@ -9,8 +9,9 @@ Size pWidget::minimumSize() {
 }
 
 void pWidget::setEnabled(bool enabled) {
+  if(!widget.parent()) enabled = false;
   if(widget.state.abstract) enabled = false;
-  if(sizable.state.layout && sizable.state.layout->enabled() == false) enabled = false;
+  if(!widget.enabledToAll()) enabled = false;
   qtWidget->setEnabled(enabled);
 }
 
@@ -28,9 +29,9 @@ void pWidget::setGeometry(Geometry geometry) {
 }
 
 void pWidget::setVisible(bool visible) {
+  if(!widget.parent()) visible = false;
   if(widget.state.abstract) visible = false;
-  if(sizable.state.layout == 0) visible = false;
-  if(sizable.state.layout && sizable.state.layout->visible() == false) visible = false;
+  if(!widget.visibleToAll()) visible = false;
   qtWidget->setVisible(visible);
 }
 
@@ -41,9 +42,7 @@ void pWidget::constructor() {
 //pWidget::constructor() called before p{Derived}::constructor(); ergo qtWidget is not yet valid
 //pWidget::synchronizeState() is called to finish construction of p{Derived}::constructor()
 void pWidget::synchronizeState() {
-  setEnabled(widget.state.enabled);
-  setFont(widget.state.font);
-//setVisible(widget.state.visible);
+  setFont(widget.font());
 }
 
 void pWidget::destructor() {

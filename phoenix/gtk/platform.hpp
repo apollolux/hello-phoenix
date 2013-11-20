@@ -117,7 +117,6 @@ struct pWindow : public pObject {
   void append(Layout& layout);
   void append(Menu& menu);
   void append(Widget& widget);
-  Color backgroundColor();
   bool focused();
   Geometry frameMargin();
   Geometry geometry();
@@ -236,16 +235,18 @@ struct pLayout : public pSizable {
 
 struct pWidget : public pSizable {
   Widget& widget;
-  GtkWidget* gtkWidget;
+  GtkWidget* gtkWidget = nullptr;
+  GtkWidget* gtkParent = nullptr;
 
-  bool enabled();
+  virtual GtkWidget* container(Widget& widget);
+  virtual Size containerOffset();
   virtual bool focused();
   virtual Size minimumSize();
-  void setEnabled(bool enabled);
+  virtual void setEnabled(bool enabled);
   virtual void setFocused();
   virtual void setFont(string font);
   virtual void setGeometry(Geometry geometry);
-  void setVisible(bool visible);
+  virtual void setVisible(bool visible);
 
   pWidget(Widget& widget) : pSizable(widget), widget(widget) {}
   void constructor();
@@ -268,16 +269,24 @@ struct pButton : public pWidget {
 
 struct pCanvas : public pWidget {
   Canvas& canvas;
-  cairo_surface_t* surface;
+  GdkPixbuf* surface = nullptr;
+  unsigned surfaceWidth = 0;
+  unsigned surfaceHeight = 0;
 
+  Size minimumSize();
   void setDroppable(bool droppable);
+  void setGeometry(Geometry geometry);
+  void setMode(Canvas::Mode mode);
   void setSize(Size size);
-  void update();
 
   pCanvas(Canvas& canvas) : pWidget(canvas), canvas(canvas) {}
   void constructor();
   void destructor();
   void orphan();
+  void onExpose(GdkEventExpose* event);
+  void rasterize();
+  void redraw();
+  void release();
 };
 
 struct pCheckButton : public pWidget {
@@ -345,8 +354,12 @@ struct pConsole : public pWidget {
 struct pFrame : public pWidget {
   Frame& frame;
 
+  GtkWidget* container(Widget& widget);
+  Size containerOffset();
+  void setEnabled(bool enabled);
   void setGeometry(Geometry geometry);
   void setText(string text);
+  void setVisible(bool visible);
 
   pFrame(Frame& frame) : pWidget(frame), frame(frame) {}
   void constructor();
@@ -527,11 +540,15 @@ struct pTabFrame : public pWidget {
   vector<Tab> tabs;
 
   void append(string text, const image& image);
+  GtkWidget* container(Widget& widget);
+  Size containerOffset();
   void remove(unsigned selection);
+  void setEnabled(bool enabled);
   void setGeometry(Geometry geometry);
   void setImage(unsigned selection, const image& image);
   void setSelection(unsigned selection);
   void setText(unsigned selection, string text);
+  void setVisible(bool visible);
 
   pTabFrame(TabFrame& tabFrame) : pWidget(tabFrame), tabFrame(tabFrame) {}
   void constructor();

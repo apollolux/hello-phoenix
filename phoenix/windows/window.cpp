@@ -66,12 +66,6 @@ void pWindow::append(Widget& widget) {
   }
 }
 
-Color pWindow::backgroundColor() {
-  if(window.state.backgroundColorOverride) return window.state.backgroundColor;
-  DWORD color = GetSysColor(COLOR_3DFACE);
-  return {(uint8_t)(color >> 16), (uint8_t)(color >> 8), (uint8_t)(color >> 0), 255u};
-}
-
 bool pWindow::focused() {
   return (GetForegroundWindow() == hwnd);
 }
@@ -232,7 +226,7 @@ void pWindow::constructor() {
   hmenu = CreateMenu();
   hstatus = CreateWindow(STATUSCLASSNAME, L"", WS_CHILD, 0, 0, 0, 0, hwnd, 0, GetModuleHandle(0), 0);
   hstatusfont = 0;
-  setStatusFont("Tahoma, 8");
+  setStatusFont(Font::sans(8));
 
   //status bar will be capable of receiving tab focus if it is not disabled
   SetWindowLongPtr(hstatus, GWL_STYLE, GetWindowLong(hstatus, GWL_STYLE) | WS_DISABLED);
@@ -240,6 +234,9 @@ void pWindow::constructor() {
   SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)&window);
   setDroppable(window.state.droppable);
   setGeometry({128, 128, 256, 256});
+
+  DWORD color = GetSysColor(COLOR_3DFACE);
+  window.state.backgroundColor = Color((uint8_t)(color >> 16), (uint8_t)(color >> 8), (uint8_t)(color >> 0), 255u);
 }
 
 void pWindow::destructor() {

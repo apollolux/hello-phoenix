@@ -15,6 +15,7 @@ using namespace nall;
 
 namespace phoenix {
   #include "state.hpp"
+  #include "utility.cpp"
   #include "layout/fixed-layout.cpp"
   #include "layout/horizontal-layout.cpp"
   #include "layout/vertical-layout.cpp"
@@ -83,7 +84,7 @@ uint32_t Color::rgb() const {
   return (255 << 24) + (red << 16) + (green << 8) + (blue << 0);
 }
 
-uint32_t Color::rgba() const {
+uint32_t Color::argb() const {
   return (alpha << 24) + (red << 16) + (green << 8) + (blue << 0);
 }
 
@@ -313,8 +314,8 @@ Timer::~Timer() {
 
 void Window::append(Layout& layout) {
   if(state.layout.append(layout)) {
-    ((Sizable&)layout).state.window = this;
-    ((Sizable&)layout).state.layout = nullptr;
+    layout.Sizable::state.parent = nullptr;
+    layout.Sizable::state.window = this;
     p.append(layout);
     layout.synchronizeLayout();
   }
@@ -322,21 +323,21 @@ void Window::append(Layout& layout) {
 
 void Window::append(Menu& menu) {
   if(state.menu.append(menu)) {
-    ((Action&)menu).state.window = this;
+    menu.Action::state.window = this;
     p.append(menu);
   }
 }
 
 void Window::append(Widget& widget) {
   if(state.widget.append(widget)) {
-    ((Sizable&)widget).state.window = this;
+    widget.Sizable::state.window = this;
     p.append(widget);
     widget.synchronizeLayout();
   }
 }
 
-Color Window::backgroundColor() {
-  return p.backgroundColor();
+Color Window::backgroundColor() const {
+  return state.backgroundColor;
 }
 
 bool Window::droppable() const {
@@ -383,21 +384,21 @@ bool Window::modal() const {
 void Window::remove(Layout& layout) {
   if(state.layout.remove(layout)) {
     p.remove(layout);
-    ((Sizable&)layout).state.window = nullptr;
+    layout.Sizable::state.window = nullptr;
   }
 }
 
 void Window::remove(Menu& menu) {
   if(state.menu.remove(menu)) {
     p.remove(menu);
-    ((Action&)menu).state.window = nullptr;
+    menu.Action::state.window = nullptr;
   }
 }
 
 void Window::remove(Widget& widget) {
   if(state.widget.remove(widget)) {
     p.remove(widget);
-    ((Sizable&)widget).state.window = nullptr;
+    widget.Sizable::state.window = nullptr;
   }
 }
 
@@ -751,12 +752,36 @@ RadioItem::~RadioItem() {
 //Sizable
 //=======
 
+bool Sizable::enabled() const {
+  return state.enabled;
+}
+
+bool Sizable::enabledToAll() const {
+  if(state.enabled == false) return false;
+  if(state.parent) return state.parent->enabledToAll();
+  return true;
+}
+
 Layout* Sizable::layout() const {
-  return state.layout;
+  if(state.parent && dynamic_cast<Layout*>(state.parent)) return (Layout*)state.parent;
+  return nullptr;
+}
+
+Sizable* Sizable::parent() const {
+  return state.parent;
+}
+
+bool Sizable::visible() const {
+  return state.visible;
+}
+
+bool Sizable::visibleToAll() const {
+  if(state.visible == false) return false;
+  if(state.parent) return state.parent->visibleToAll();
+  return true;
 }
 
 Window* Sizable::window() const {
-  if(state.layout) return state.layout->window();
   return state.window;
 }
 
@@ -777,8 +802,8 @@ Sizable::~Sizable() {
 //======
 
 void Layout::append(Sizable& sizable) {
-  sizable.state.layout = this;
-  sizable.state.window = nullptr;
+  sizable.state.parent = this;
+  sizable.state.window = Sizable::state.window;
 
   if(dynamic_cast<Layout*>(&sizable)) {
     Layout& layout = (Layout&)sizable;
@@ -797,7 +822,7 @@ void Layout::remove(Sizable& sizable) {
     if(sizable.window()) sizable.window()->remove(widget);
   }
 
-  sizable.state.layout = nullptr;
+  sizable.state.parent = nullptr;
   sizable.state.window = nullptr;
 }
 
@@ -820,17 +845,13 @@ p(p) {
 
 Layout::~Layout() {
   if(layout()) layout()->remove(*this);
-  else if(window()) window()->remove(*this);
+  if(window()) window()->remove(*this);
   p.destructor();
   delete &state;
 }
 
 //Widget
 //======
-
-bool Widget::enabled() const {
-  return state.enabled;
-}
 
 bool Widget::focused() {
   return p.focused();
@@ -849,7 +870,7 @@ Size Widget::minimumSize() {
 }
 
 void Widget::setEnabled(bool enabled) {
-  state.enabled = enabled;
+  Sizable::state.enabled = enabled;
   return p.setEnabled(enabled);
 }
 
@@ -868,15 +889,11 @@ void Widget::setGeometry(Geometry geometry) {
 }
 
 void Widget::setVisible(bool visible) {
-  state.visible = visible;
+  Sizable::state.visible = visible;
   return p.setVisible(visible);
 }
 
 void Widget::synchronizeLayout() {
-}
-
-bool Widget::visible() const {
-  return state.visible;
 }
 
 Widget::Widget():
@@ -943,42 +960,38 @@ Button::~Button() {
 //Canvas
 //======
 
-const uint32_t* Canvas::data() const {
+Color Canvas::color() const {
+  return state.color;
+}
+
+uint32_t* Canvas::data() const {
   return state.data;
 }
 
-uint32_t* Canvas::data() {
-  return state.data;
+bool Canvas::droppable() const {
+  return state.droppable;
 }
 
-void Canvas::fill(Color a) {
-  uint32_t* buffer = data();
-  for(unsigned y = 0; y < state.height; y++) {
-    for(unsigned x = 0; x < state.width; x++) {
-      *buffer++ = a.rgb();
-    }
-  }
-  return update();
+vector<Color> Canvas::gradient() const {
+  return state.gradient;
 }
 
-void Canvas::fill(Color a, Color b, Color c, Color d) {
-  auto interpolate = [](uint8_t a, uint8_t b, uint8_t c, uint8_t d, double t, double s) {
-    return (uint8_t)(a * (1.0 - t) * (1.0 - s) + b * t * (1.0 - s) + c * (1.0 - t) * s + d * t * s);
-  };
+image Canvas::image() const {
+  return state.image;
+}
 
-  uint32_t* buffer = data();
-  for(unsigned y = 0; y < state.height; y++) {
-    double s = (double)y / (double)(state.height - 1);
-    for(unsigned x = 0; x < state.width; x++) {
-      double t = (double)x / (double)(state.width - 1);
-      uint8_t alpha = interpolate(a.alpha, b.alpha, c.alpha, d.alpha, t, s);
-      uint8_t red = interpolate(a.red, b.red, c.red, d.red, t, s);
-      uint8_t green = interpolate(a.green, b.green, c.green, d.green, t, s);
-      uint8_t blue = interpolate(a.blue, b.blue, c.blue, d.blue, t, s);
-      *buffer++ = (alpha << 24) | (red << 16) | (green << 8) | (blue << 0);
-    }
-  }
-  return update();
+Canvas::Mode Canvas::mode() const {
+  return state.mode;
+}
+
+void Canvas::setColor(Color color) {
+  state.color = color;
+  return setMode(Canvas::Mode::Color);
+}
+
+void Canvas::setData() {
+  if(state.width == 0 || state.height == 0) return;  //dynamic sizing not supported in Mode::Data
+  return setMode(Canvas::Mode::Data);
 }
 
 void Canvas::setDroppable(bool droppable) {
@@ -986,30 +999,48 @@ void Canvas::setDroppable(bool droppable) {
   return p.setDroppable(droppable);
 }
 
-bool Canvas::setImage(const nall::image& image) {
-  if(image.data == nullptr || image.width == 0 || image.height == 0) return false;
-  state.width = image.width;
-  state.height = image.height;
-  setSize({state.width, state.height});
-  memcpy(state.data, image.data, state.width * state.height * sizeof(uint32_t));
-  update();
-  return true;
+void Canvas::setGradient(Color topLeft, Color topRight, Color bottomLeft, Color bottomRight) {
+  state.gradient[0] = topLeft;
+  state.gradient[1] = topRight;
+  state.gradient[2] = bottomLeft;
+  state.gradient[3] = bottomRight;
+  return setMode(Canvas::Mode::Gradient);
+}
+
+void Canvas::setHorizontalGradient(Color left, Color right) {
+  state.gradient[0] = state.gradient[2] = left;
+  state.gradient[1] = state.gradient[3] = right;
+  return setMode(Canvas::Mode::Gradient);
+}
+
+void Canvas::setImage(const nall::image& image) {
+  state.image = image;
+  return setMode(Canvas::Mode::Image);
+}
+
+void Canvas::setMode(Mode mode) {
+  state.mode = mode;
+  return p.setMode(mode);
 }
 
 void Canvas::setSize(Size size) {
+  if(size.width == Size::Maximum) size.width = 0;
+  if(size.height == Size::Maximum) size.height = 0;
   state.width = size.width;
   state.height = size.height;
   delete[] state.data;
-  state.data = new uint32_t[size.width * size.height];
-  return p.setSize(size);
+  state.data = new uint32_t[state.width * state.height]();
+  return setMode(state.mode);
+}
+
+void Canvas::setVerticalGradient(Color top, Color bottom) {
+  state.gradient[0] = state.gradient[1] = top;
+  state.gradient[2] = state.gradient[3] = bottom;
+  return setMode(Canvas::Mode::Gradient);
 }
 
 Size Canvas::size() const {
   return {state.width, state.height};
-}
-
-void Canvas::update() {
-  return p.update();
 }
 
 Canvas::Canvas():
@@ -1017,7 +1048,7 @@ state(*new State),
 base_from_member<pCanvas&>(*new pCanvas(*this)),
 Widget(base_from_member<pCanvas&>::value),
 p(base_from_member<pCanvas&>::value) {
-  state.data = new uint32_t[state.width * state.height];
+  state.data = new uint32_t[state.width * state.height]();
   p.constructor();
 }
 
@@ -1172,7 +1203,7 @@ ComboButton::~ComboButton() {
 //Console
 //=======
 
-void Console::print_(const string& text) {
+void Console::print(const string& text) {
   return p.print(text);
 }
 
@@ -1208,7 +1239,9 @@ void Frame::setText(const string& text) {
 
 void Frame::synchronizeLayout() {
   if(state.layout == nullptr) return;
-  ((Sizable*)state.layout)->state.window = ((Sizable*)this)->state.window;
+  state.layout->Sizable::state.window = Sizable::state.window;
+  state.layout->Sizable::state.parent = this;
+  state.layout->state.widget = this;
   state.layout->synchronizeLayout();
 }
 
@@ -1669,11 +1702,16 @@ RadioLabel::~RadioLabel() {
 //TabFrame
 //========
 
-void TabFrame::append(const string& text, const image& image) {
+void TabFrame::append(const string& text, const nall::image& image) {
   state.image.append(image);
   state.layout.append(nullptr);
   state.text.append(text);
   return p.append(text, image);
+}
+
+image TabFrame::image(unsigned selection) const {
+  if(selection >= state.text.size()) return {};
+  return state.image[selection];
 }
 
 void TabFrame::remove(unsigned selection) {
@@ -1688,7 +1726,7 @@ unsigned TabFrame::selection() const {
   return state.selection;
 }
 
-void TabFrame::setImage(unsigned selection, const image& image) {
+void TabFrame::setImage(unsigned selection, const nall::image& image) {
   if(selection >= state.text.size()) return;
   state.image[selection] = image;
   return p.setImage(selection, image);
@@ -1712,9 +1750,13 @@ void TabFrame::setText(unsigned selection, const string& text) {
 }
 
 void TabFrame::synchronizeLayout() {
-  for(auto& layout : state.layout) {
+  for(unsigned n = 0; n < state.layout.size(); n++) {
+    Layout* layout = state.layout[n];
     if(layout == nullptr) continue;
-    ((Sizable*)layout)->state.window = ((Sizable*)this)->state.window;
+    layout->Sizable::state.parent = this;
+    layout->Sizable::state.window = Sizable::state.window;
+    layout->state.widget = this;
+    layout->state.widgetSelection = n;
     layout->synchronizeLayout();
   }
 }

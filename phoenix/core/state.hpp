@@ -52,12 +52,12 @@ struct Action::State {
 
 struct Menu::State {
   group<Action> action;
-  nall::image image = {0, 32, 255u << 24, 255u << 16, 255u << 8, 255u << 0};
+  nall::image image;
   string text;
 };
 
 struct Item::State {
-  nall::image image = {0, 32, 255u << 24, 255u << 16, 255u << 8, 255u << 0};
+  nall::image image;
   string text;
 };
 
@@ -73,37 +73,43 @@ struct RadioItem::State {
 };
 
 struct Sizable::State {
-  Layout* layout = nullptr;
+  bool enabled = true;
+  Sizable* parent = nullptr;
+  bool visible = true;
   Window* window = nullptr;
 };
 
 struct Layout::State {
+  Widget* widget = nullptr;
+  unsigned widgetSelection = 0;
 };
 
 struct Widget::State {
   bool abstract = false;
-  bool enabled = true;
   string font;
   Geometry geometry = {0, 0, 0, 0};
-  bool visible = true;
 };
 
 struct Button::State {
-  nall::image image = {0, 32, 255u << 24, 255u << 16, 255u << 8, 255u << 0};
+  nall::image image;
   Orientation orientation = Orientation::Horizontal;
   string text;
 };
 
 struct Canvas::State {
+  Color color;
   uint32_t* data = nullptr;
   bool droppable = false;
-  unsigned width = 256;
-  unsigned height = 256;
+  vector<Color> gradient = {{}, {}, {}, {}};
+  nall::image image;
+  Canvas::Mode mode = Canvas::Mode::Color;
+  unsigned width = 0;
+  unsigned height = 0;
 };
 
 struct CheckButton::State {
   bool checked = false;
-  nall::image image = {0, 32, 255u << 24, 255u << 16, 255u << 8, 255u << 0};
+  nall::image image;
   Orientation orientation = Orientation::Horizontal;
   string text;
 };
@@ -170,7 +176,7 @@ struct ProgressBar::State {
 struct RadioButton::State {
   bool checked = true;
   nall::group<RadioButton> group;
-  nall::image image = {0, 32, 255u << 24, 255u << 16, 255u << 8, 255u << 0};
+  nall::image image;
   Orientation orientation = Orientation::Horizontal;
   string text;
 };

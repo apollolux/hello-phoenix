@@ -1,5 +1,10 @@
 namespace phoenix {
 
+void pFrame::setEnabled(bool enabled) {
+  if(frame.state.layout) frame.state.layout->setEnabled(frame.state.layout->enabled());
+  pWidget::setEnabled(enabled);
+}
+
 void pFrame::setGeometry(Geometry geometry) {
   bool empty = frame.state.text.empty();
   Size size = pFont::size(hfont, frame.state.text);
@@ -16,6 +21,11 @@ void pFrame::setGeometry(Geometry geometry) {
 
 void pFrame::setText(string text) {
   SetWindowText(hwnd, utf16_t(text));
+}
+
+void pFrame::setVisible(bool visible) {
+  if(frame.state.layout) frame.state.layout->setVisible(frame.state.layout->visible());
+  pWidget::setVisible(visible);
 }
 
 void pFrame::constructor() {

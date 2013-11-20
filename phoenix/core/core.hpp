@@ -85,9 +85,10 @@ struct Application {
 struct Color {
   uint8_t red, green, blue, alpha;
   uint32_t rgb() const;
-  uint32_t rgba() const;
-  inline Color() : red(0), green(0), blue(0), alpha(255) {}
-  inline Color(uint8_t red, uint8_t green, uint8_t blue, uint8_t alpha = 255) : red(red), green(green), blue(blue), alpha(alpha) {}
+  uint32_t argb() const;
+  inline Color() : alpha(255), red(0), green(0), blue(0) {}
+  inline Color(uint8_t red, uint8_t green, uint8_t blue) : alpha(255), red(red), green(green), blue(blue) {}
+  inline Color(uint8_t alpha, uint8_t red, uint8_t green, uint8_t blue) : alpha(alpha), red(red), green(green), blue(blue) {}
 };
 
 struct Position {
@@ -227,7 +228,7 @@ struct Window : private nall::base_from_member<pWindow&>, Object {
   void append(Layout& layout);
   void append(Menu& menu);
   void append(Widget& widget);
-  Color backgroundColor();
+  Color backgroundColor() const;
   bool droppable() const;
   Geometry frameGeometry();
   Geometry frameMargin();
@@ -356,14 +357,17 @@ struct RadioItem : private nall::base_from_member<pRadioItem&>, Action {
 };
 
 struct Sizable : Object {
-  virtual bool enabled() const = 0;
+  bool enabled() const;
+  bool enabledToAll() const;
   Layout* layout() const;
   virtual Size minimumSize() = 0;
+  Sizable* parent() const;
   virtual void setEnabled(bool enabled = true) = 0;
   virtual void setGeometry(Geometry geometry) = 0;
   virtual void setVisible(bool visible = true) = 0;
   virtual void synchronizeLayout() = 0;
-  virtual bool visible() const = 0;
+  bool visible() const;
+  bool visibleToAll() const;
   Window* window() const;
 
   Sizable(pSizable& p);
@@ -389,7 +393,6 @@ struct Layout : private nall::base_from_member<pLayout&>, Sizable {
 struct Widget : private nall::base_from_member<pWidget&>, Sizable {
   nall::function<void ()> onSize;
 
-  bool enabled() const;
   bool focused();
   nall::string font() const;
   Geometry geometry() const;
@@ -400,7 +403,6 @@ struct Widget : private nall::base_from_member<pWidget&>, Sizable {
   void setGeometry(Geometry geometry);
   void setVisible(bool visible = true);
   void synchronizeLayout();
-  bool visible() const;
 
   Widget();
   Widget(pWidget& p);
@@ -427,21 +429,30 @@ struct Button : private nall::base_from_member<pButton&>, Widget {
 };
 
 struct Canvas : private nall::base_from_member<pCanvas&>, Widget {
+  enum class Mode : unsigned { Color, Gradient, Image, Data };
+
   nall::function<void (nall::lstring)> onDrop;
   nall::function<void ()> onMouseLeave;
   nall::function<void (Position)> onMouseMove;
   nall::function<void (Mouse::Button)> onMousePress;
   nall::function<void (Mouse::Button)> onMouseRelease;
 
-  const uint32_t* data() const;
-  uint32_t* data();
-  void fill(Color a);
-  void fill(Color a, Color b, Color c, Color d);
+  Color color() const;
+  uint32_t* data() const;
+  bool droppable() const;
+  nall::vector<Color> gradient() const;
+  nall::image image() const;
+  Mode mode() const;
+  void setColor(Color color);
+  void setData();
   void setDroppable(bool droppable = true);
-  bool setImage(const nall::image& image);
+  void setHorizontalGradient(Color left, Color right);
+  void setGradient(Color topLeft, Color topRight, Color bottomLeft, Color bottomRight);
+  void setImage(const nall::image& image);
+  void setMode(Mode mode);
   void setSize(Size size);
+  void setVerticalGradient(Color top, Color bottom);
   Size size() const;
-  void update();
 
   Canvas();
   ~Canvas();
@@ -505,9 +516,9 @@ struct ComboButton : private nall::base_from_member<pComboButton&>, Widget {
 struct Console : private nall::base_from_member<pConsole&>, Widget {
   nall::function<void (nall::string)> onActivate;
 
-  template<typename... Args> void print(Args&&... args) { print_({args...}); }
+  template<typename... Args> void print(Args&&... args) { print({args...}); }
 
-  void print_(const nall::string& text);
+  void print(const nall::string& text);
   void reset();
 
   Console();
@@ -696,6 +707,7 @@ struct TabFrame : private nall::base_from_member<pTabFrame&>, Widget {
   nall::function<void ()> onChange;
 
   void append(const nall::string& text = "", const nall::image& image = nall::image{});
+  nall::image image(unsigned selection) const;
   void remove(unsigned selection);
   unsigned selection() const;
   void setImage(unsigned selection, const nall::image& image = nall::image{});

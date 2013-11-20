@@ -1,9 +1,5 @@
 namespace phoenix {
 
-bool pWidget::enabled() {
-  return IsWindowEnabled(hwnd);
-}
-
 bool pWidget::focused() {
   return GetFocus() == hwnd;
 }
@@ -13,8 +9,9 @@ Size pWidget::minimumSize() {
 }
 
 void pWidget::setEnabled(bool enabled) {
+  if(!widget.parent()) enabled = false;
   if(widget.state.abstract) enabled = false;
-  if(sizable.state.layout && sizable.state.layout->enabled() == false) enabled = false;
+  if(!widget.enabledToAll()) enabled = false;
   EnableWindow(hwnd, enabled);
 }
 
@@ -34,13 +31,14 @@ void pWidget::setGeometry(Geometry geometry) {
 }
 
 void pWidget::setVisible(bool visible) {
+  if(!widget.parent()) visible = false;
   if(widget.state.abstract) visible = false;
-  if(sizable.state.layout && sizable.state.layout->visible() == false) visible = false;
+  if(!widget.visibleToAll()) visible = false;
   ShowWindow(hwnd, visible ? SW_SHOWNORMAL : SW_HIDE);
 }
 
 void pWidget::constructor() {
-  hfont = pFont::create("Tahoma, 8");
+  hfont = pFont::create(Font::sans(8));
   if(widget.state.abstract) {
     hwnd = CreateWindow(L"phoenix_label", L"", WS_CHILD, 0, 0, 0, 0, parentWindow->p.hwnd, (HMENU)id, GetModuleHandle(0), 0);
     SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)&widget);
@@ -60,7 +58,7 @@ void pWidget::orphan() {
 
 void pWidget::setDefaultFont() {
   string description = widget.state.font;
-  if(description.empty()) description = "Tahoma, 8";
+  if(description.empty()) description = Font::sans(8);
   hfont = pFont::create(description);
   SendMessage(hwnd, WM_SETFONT, (WPARAM)hfont, 0);
 }

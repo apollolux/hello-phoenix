@@ -176,18 +176,6 @@ void pWindow::append(Widget& widget) {
   }
 }
 
-Color pWindow::backgroundColor() {
-  @autoreleasepool {
-    NSColor* color = [[cocoaWindow backgroundColor] colorUsingColorSpaceName:NSCalibratedRGBColorSpace];
-    return {
-      uint8_t(255 * [color redComponent]),
-      uint8_t(255 * [color greenComponent]),
-      uint8_t(255 * [color blueComponent]),
-      uint8_t(255 * [color alphaComponent])
-    };
-  }
-}
-
 bool pWindow::focused() {
   @autoreleasepool {
     return [cocoaWindow isMainWindow] == YES;
@@ -362,6 +350,14 @@ void pWindow::setWidgetFont(string font) {
 void pWindow::constructor() {
   @autoreleasepool {
     cocoaWindow = [[CocoaWindow alloc] initWith:window];
+
+    NSColor* color = [[cocoaWindow backgroundColor] colorUsingColorSpaceName:NSCalibratedRGBColorSpace];
+    window.state.backgroundColor = Color(
+      (uint8_t)(255 * [color redComponent]),
+      (uint8_t)(255 * [color greenComponent]),
+      (uint8_t)(255 * [color blueComponent]),
+      (uint8_t)(255 * [color alphaComponent])
+    );
   }
 }
 

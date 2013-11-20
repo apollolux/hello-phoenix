@@ -1,5 +1,10 @@
 namespace phoenix {
 
+void pFrame::setEnabled(bool enabled) {
+  if(frame.state.layout) frame.state.layout->setEnabled(frame.state.layout->enabled());
+  pWidget::setEnabled(enabled);
+}
+
 void pFrame::setGeometry(Geometry geometry) {
   pWidget::setGeometry(geometry);
   if(frame.state.layout == nullptr) return;
@@ -12,6 +17,11 @@ void pFrame::setGeometry(Geometry geometry) {
 
 void pFrame::setText(string text) {
   qtFrame->setTitle(QString::fromUtf8(text));
+}
+
+void pFrame::setVisible(bool visible) {
+  if(frame.state.layout) frame.state.layout->setVisible(frame.state.layout->visible());
+  pWidget::setVisible(visible);
 }
 
 void pFrame::constructor() {

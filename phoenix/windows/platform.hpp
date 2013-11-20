@@ -104,7 +104,6 @@ struct pWindow : public pObject {
   void append(Layout& layout);
   void append(Menu& menu);
   void append(Widget& widget);
-  Color backgroundColor();
   bool focused();
   Geometry frameMargin();
   Geometry geometry();
@@ -224,14 +223,13 @@ struct pWidget : public pSizable {
   HWND hwnd;
   HFONT hfont;
 
-  bool enabled();
   bool focused();
   virtual Size minimumSize();
-  void setEnabled(bool enabled);
+  virtual void setEnabled(bool enabled);
   void setFocused();
   void setFont(string font);
   virtual void setGeometry(Geometry geometry);
-  void setVisible(bool visible);
+  virtual void setVisible(bool visible);
 
   pWidget(Widget& widget) : pSizable(widget), widget(widget) { parentWindow = &pWindow::none(); }
   void constructor();
@@ -258,17 +256,26 @@ struct pButton : public pWidget {
 
 struct pCanvas : public pWidget {
   Canvas& canvas;
-  uint32_t* data;
+  HBRUSH colorBrush = nullptr;
+  uint32_t* surface = nullptr;
+  unsigned surfaceWidth = 0;
+  unsigned surfaceHeight = 0;
+  unsigned surfaceBackgroundColor = 0;
 
   void setDroppable(bool droppable);
+  void setGeometry(Geometry geometry);
+  void setMode(Canvas::Mode mode);
   void setSize(Size size);
-  void update();
 
   pCanvas(Canvas& canvas) : pWidget(canvas), canvas(canvas) {}
   void constructor();
   void destructor();
   void orphan();
+  uint32_t getBackgroundColor();
   void paint();
+  void rasterize();
+  void redraw();
+  void release();
 };
 
 struct pCheckButton : public pWidget {
@@ -334,8 +341,10 @@ struct pConsole : public pWidget {
 struct pFrame : public pWidget {
   Frame& frame;
 
+  void setEnabled(bool enabled);
   void setGeometry(Geometry geometry);
   void setText(string text);
+  void setVisible(bool visible);
 
   pFrame(Frame& frame) : pWidget(frame), frame(frame) {}
   void constructor();
@@ -494,10 +503,12 @@ struct pTabFrame : public pWidget {
 
   void append(string text, const image& image);
   void remove(unsigned selection);
+  void setEnabled(bool enabled);
   void setGeometry(Geometry geometry);
   void setImage(unsigned selection, const image& image);
   void setSelection(unsigned selection);
   void setText(unsigned selection, string text);
+  void setVisible(bool visible);
 
   pTabFrame(TabFrame& tabFrame) : pWidget(tabFrame), tabFrame(tabFrame) {}
   void constructor();

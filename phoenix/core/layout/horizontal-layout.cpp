@@ -11,11 +11,6 @@ void HorizontalLayout::append(Sizable& sizable) {
   if(window()) window()->synchronizeLayout();
 }
 
-bool HorizontalLayout::enabled() const {
-  if(layout()) return state.enabled && layout()->enabled();
-  return state.enabled;
-}
-
 Size HorizontalLayout::minimumSize() {
   unsigned width = 0, height = 0;
 
@@ -43,7 +38,7 @@ void HorizontalLayout::remove(Sizable& sizable) {
   for(unsigned n = 0; n < children.size(); n++) {
     if(children[n].sizable == &sizable) {
       if(dynamic_cast<Layout*>(children[n].sizable)) {
-        Layout *layout = (Layout*)children[n].sizable;
+        Layout* layout = (Layout*)children[n].sizable;
         layout->reset();
       }
       children.remove(n);
@@ -66,9 +61,9 @@ void HorizontalLayout::setAlignment(double alignment) {
 }
 
 void HorizontalLayout::setEnabled(bool enabled) {
-  state.enabled = enabled;
+  Sizable::state.enabled = enabled;
   for(auto& child : children) {
-    child.sizable->setEnabled(dynamic_cast<Widget*>(child.sizable) ? child.sizable->enabled() : enabled);
+    child.sizable->setEnabled(child.sizable->enabled());
   }
 }
 
@@ -117,26 +112,14 @@ void HorizontalLayout::setMargin(unsigned margin) {
 }
 
 void HorizontalLayout::setVisible(bool visible) {
-  state.visible = visible;
+  Sizable::state.visible = visible;
   for(auto& child : children) {
-    child.sizable->setVisible(dynamic_cast<Widget*>(child.sizable) ? child.sizable->visible() : visible);
+    child.sizable->setVisible(child.sizable->visible());
   }
 }
 
 void HorizontalLayout::synchronizeLayout() {
   for(auto& child : children) Layout::append(*child.sizable);
-}
-
-bool HorizontalLayout::visible() const {
-  if(layout()) return state.visible && layout()->visible();
-  return state.visible;
-}
-
-HorizontalLayout::HorizontalLayout() {
-  state.alignment = 0.5;
-  state.enabled = true;
-  state.margin = 0;
-  state.visible = true;
 }
 
 HorizontalLayout::~HorizontalLayout() {

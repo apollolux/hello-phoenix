@@ -132,7 +132,6 @@ public:
   void append(Layout& layout);
   void append(Menu& menu);
   void append(Widget& widget);
-  Color backgroundColor();
   Geometry frameMargin();
   bool focused();
   Geometry geometry();
@@ -277,11 +276,11 @@ struct pWidget : public pSizable {
 
   bool focused();
   virtual Size minimumSize();
-  void setEnabled(bool enabled);
+  virtual void setEnabled(bool enabled);
   void setFocused();
   void setFont(string font);
   virtual void setGeometry(Geometry geometry);
-  void setVisible(bool visible);
+  virtual void setVisible(bool visible);
 
   pWidget(Widget& widget) : pSizable(widget), widget(widget) {}
   void constructor();
@@ -315,7 +314,9 @@ struct pCanvas : public QObject, public pWidget {
 
 public:
   Canvas& canvas;
-  QImage* qtImage;
+  QImage* surface = nullptr;
+  unsigned surfaceWidth = 0;
+  unsigned surfaceHeight = 0;
   struct QtCanvas : public QWidget {
     pCanvas& self;
     void dragEnterEvent(QDragEnterEvent*);
@@ -330,13 +331,16 @@ public:
   QtCanvas* qtCanvas;
 
   void setDroppable(bool droppable);
+  void setGeometry(Geometry geometry);
+  void setMode(Canvas::Mode mode);
   void setSize(Size size);
-  void update();
 
   pCanvas(Canvas& canvas) : pWidget(canvas), canvas(canvas) {}
   void constructor();
   void destructor();
   void orphan();
+  void rasterize();
+  void release();
 
 public slots:
 };
@@ -436,8 +440,10 @@ public:
   Frame& frame;
   QGroupBox* qtFrame;
 
+  void setEnabled(bool enabled);
   void setGeometry(Geometry geometry);
   void setText(string text);
+  void setVisible(bool visible);
 
   pFrame(Frame& frame) : pWidget(frame), frame(frame) {}
   void constructor();
@@ -659,10 +665,12 @@ public:
 
   void append(string text, const image& image);
   void remove(unsigned selection);
+  void setEnabled(bool enabled);
   void setGeometry(Geometry geometry);
   void setImage(unsigned selection, const image& image);
   void setSelection(unsigned selection);
   void setText(unsigned selection, string text);
+  void setVisible(bool visible);
 
   pTabFrame(TabFrame& tabFrame) : pWidget(tabFrame), tabFrame(tabFrame) {}
   void constructor();
