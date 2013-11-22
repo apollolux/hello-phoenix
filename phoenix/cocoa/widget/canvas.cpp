@@ -167,7 +167,7 @@ void pCanvas::rasterize() {
       if(canvas.state.mode == Canvas::Mode::Color) {
         nall::image image;
         image.allocate(width, height);
-        image.fill(canvas.state.color);
+        image.fill(canvas.state.color.argb());
         memcpy(target, image.data, image.size);
       }
 

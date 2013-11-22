@@ -58,7 +58,9 @@ void pRadioButton::setText(string text) {
 }
 
 void pRadioButton::constructor() {
-  hwnd = CreateWindow(L"BUTTON", L"", WS_CHILD | WS_TABSTOP | BS_CHECKBOX | BS_PUSHLIKE, 0, 0, 0, 0, parentWindow->p.hwnd, (HMENU)id, GetModuleHandle(0), 0);
+  hwnd = CreateWindow(L"BUTTON", L"",
+    WS_CHILD | WS_TABSTOP | BS_CHECKBOX | BS_PUSHLIKE,
+    0, 0, 0, 0, parentHwnd, (HMENU)id, GetModuleHandle(0), 0);
   SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)&radioButton);
   setDefaultFont();
   if(radioButton.state.checked) setChecked();
@@ -76,6 +78,12 @@ void pRadioButton::destructor() {
 void pRadioButton::orphan() {
   destructor();
   constructor();
+}
+
+void pRadioButton::onActivate() {
+  if(radioButton.state.checked) return;
+  radioButton.setChecked();
+  if(radioButton.onActivate) radioButton.onActivate();
 }
 
 }

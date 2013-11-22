@@ -29,11 +29,21 @@ void pTabFrame::append(string text, const image& image) {
 }
 
 GtkWidget* pTabFrame::container(Widget& widget) {
-  return tabs[GetParentLayout(widget)->state.widgetSelection].child;
+  Layout* widgetLayout = GetParentWidgetLayout(&widget);
+  unsigned selection = 0;
+  for(auto& layout : tabFrame.state.layout) {
+    if(layout == widgetLayout) return tabs[selection].child;
+    selection++;
+  }
+  return nullptr;
 }
 
-Size pTabFrame::containerOffset() {
+Position pTabFrame::containerOffset() {
   return {widget.state.geometry.x + 3, widget.state.geometry.y + 28};
+}
+
+Position pTabFrame::displacement() {
+  return {6, 31};
 }
 
 void pTabFrame::remove(unsigned selection) {
@@ -50,8 +60,8 @@ void pTabFrame::setEnabled(bool enabled) {
 
 void pTabFrame::setGeometry(Geometry geometry) {
   pWidget::setGeometry(geometry);
-  geometry.x += 1, geometry.width -= 2;
-  geometry.y += 26, geometry.height -= 27;
+  geometry.x += 1, geometry.width -= 5;
+  geometry.y += 26, geometry.height -= 31;
   for(auto& layout : tabFrame.state.layout) {
     if(layout == nullptr) continue;
     layout->setGeometry(geometry);

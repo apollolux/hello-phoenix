@@ -18,7 +18,7 @@ void pVerticalSlider::setPosition(unsigned position) {
 void pVerticalSlider::constructor() {
   hwnd = CreateWindow(
     TRACKBAR_CLASS, L"", WS_CHILD | WS_TABSTOP | TBS_NOTICKS | TBS_BOTH | TBS_VERT,
-    0, 0, 0, 0, parentWindow->p.hwnd, (HMENU)id, GetModuleHandle(0), 0
+    0, 0, 0, 0, parentHwnd, (HMENU)id, GetModuleHandle(0), 0
   );
   SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)&verticalSlider);
   unsigned position = verticalSlider.state.position;
@@ -34,6 +34,13 @@ void pVerticalSlider::destructor() {
 void pVerticalSlider::orphan() {
   destructor();
   constructor();
+}
+
+void pVerticalSlider::onChange() {
+  unsigned position = SendMessage(hwnd, TBM_GETPOS, 0, 0);
+  if(position == verticalSlider.state.position) return;
+  verticalSlider.state.position = position;
+  if(verticalSlider.onChange) verticalSlider.onChange();
 }
 
 }

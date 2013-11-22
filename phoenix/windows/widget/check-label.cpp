@@ -17,7 +17,7 @@ void pCheckLabel::constructor() {
   hwnd = CreateWindow(
     L"BUTTON", L"",
     WS_CHILD | WS_TABSTOP | BS_CHECKBOX,
-    0, 0, 0, 0, parentWindow->p.hwnd, (HMENU)id, GetModuleHandle(0), 0
+    0, 0, 0, 0, parentHwnd, (HMENU)id, GetModuleHandle(0), 0
   );
   SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)&checkLabel);
   setDefaultFont();
@@ -33,6 +33,12 @@ void pCheckLabel::destructor() {
 void pCheckLabel::orphan() {
   destructor();
   constructor();
+}
+
+void pCheckLabel::onToggle() {
+  checkLabel.state.checked = !checkLabel.state.checked;
+  setChecked(checkLabel.state.checked);
+  if(checkLabel.onToggle) checkLabel.onToggle();
 }
 
 }

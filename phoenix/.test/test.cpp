@@ -4,21 +4,39 @@ using namespace phoenix;
 
 struct TestWindow : Window {
   VerticalLayout layout;
-  Frame frame;
-  VerticalLayout frameLayout;
-  TextEdit label;
+  TabFrame tabFrame;
+  VerticalLayout tabLayout;
+  TabFrame innerFrame;
+  VerticalLayout innerLayout;
+  TabFrame finalFrame;
+  VerticalLayout finalLayout;
+  ListView listView;
 
   TestWindow() {
-    setWindowGeometry({900, 64, 480, 320});
+    setWindowGeometry({64, 760, 480, 320});
+
     layout.setMargin(5);
-    frame.setText("Frame");
-    label.setText("Label\nText");
-    frameLayout.setMargin(5);
-    frameLayout.append(label, {~0, ~0});
-    frame.setLayout(frameLayout);
-    layout.append(frame, {~0, ~0});
+    tabFrame.append("Item 1");
+    tabFrame.append("Item 2");
+    layout.append(tabFrame, {~0, ~0});
+    tabLayout.setMargin(5);
+    innerFrame.append("Tab 1");
+    innerFrame.append("Tab 2");
+    innerFrame.append("Tab 3");
+    innerLayout.setMargin(5);
+    finalFrame.append("Final 1");
+    finalFrame.append("Final 2");
+    finalLayout.setMargin(5);
+    finalLayout.append(listView, {~0, ~0});
+    finalFrame.setLayout(0, finalLayout);
+    innerLayout.append(finalFrame, {~0, ~0});
+    innerFrame.setLayout(0, innerLayout);
+    tabLayout.append(innerFrame, {~0, ~0});
+    tabFrame.setLayout(0, tabLayout);
     append(layout);
+
     setVisible();
+    onClose = &Application::quit;
   }
 };
 
@@ -42,7 +60,7 @@ struct MainWindow : Window {
     layout.setMargin(5);
 
     tabFrame.append("Famicom");
-    tabFrame.append("Super Famicom");
+    tabFrame.append("Super Famicom", {"folder.png"});
     tabFrame.append("Game Boy");
     tabFrame.append("Game Boy Color");
     tabFrame.append("Game Boy Advance");
@@ -82,6 +100,7 @@ struct MainWindow : Window {
     tabFrame.setLayout(1, tabLayout1);
     layout.append(tabFrame, {~0, ~0});
     append(layout);
+
 
     onClose = &Application::quit;
     setVisible();
@@ -128,8 +147,8 @@ struct MainWindow : Window {
 };
 
 int main() {
-  new MainWindow;
   new TestWindow;
+  new MainWindow;
   Application::run();
   return 0;
 }

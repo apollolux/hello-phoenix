@@ -79,6 +79,11 @@ void pListView::setChecked(unsigned selection, bool checked) {
   locked = false;
 }
 
+void pListView::setGeometry(Geometry geometry) {
+  pWidget::setGeometry(geometry);
+  autoSizeColumns();
+}
+
 void pListView::setHeaderText(const lstring& list) {
   while(ListView_DeleteColumn(hwnd, 0));
 
@@ -149,7 +154,7 @@ void pListView::constructor() {
   hwnd = CreateWindowEx(
     WS_EX_CLIENTEDGE, WC_LISTVIEW, L"",
     WS_CHILD | WS_TABSTOP | LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | LVS_NOCOLUMNHEADER,
-    0, 0, 0, 0, parentWindow->p.hwnd, (HMENU)id, GetModuleHandle(0), 0
+    0, 0, 0, 0, parentHwnd, (HMENU)id, GetModuleHandle(0), 0
   );
   SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)&listView);
   setDefaultFont();
@@ -171,11 +176,6 @@ void pListView::destructor() {
 void pListView::orphan() {
   destructor();
   constructor();
-}
-
-void pListView::setGeometry(Geometry geometry) {
-  pWidget::setGeometry(geometry);
-  autoSizeColumns();
 }
 
 void pListView::buildImageList() {
@@ -219,6 +219,55 @@ void pListView::buildImageList() {
     for(unsigned x = 0; x < rows; x++) {
       ListView_SetImage(hwnd, imageList, y, x, imageMap(y)(x));
     }
+  }
+}
+
+void pListView::onActivate(LPARAM lparam) {
+  LPNMLISTVIEW nmlistview = (LPNMLISTVIEW)lparam;
+  if(listView.state.text.empty() || !listView.state.selected) return;
+  if(listView.onActivate) listView.onActivate();
+}
+
+void pListView::onChange(LPARAM lparam) {
+  LPNMLISTVIEW nmlistview = (LPNMLISTVIEW)lparam;
+  if(!(nmlistview->uChanged & LVIF_STATE)) return;
+
+  unsigned selection = nmlistview->iItem;
+  unsigned imagemask = ((nmlistview->uNewState & LVIS_STATEIMAGEMASK) >> 12) - 1;
+  if(imagemask == 0 || imagemask == 1) {
+    if(!locked) {
+      listView.state.checked[selection] = !listView.state.checked[selection];
+      if(listView.onToggle) listView.onToggle(selection);
+    }
+  } else if((nmlistview->uOldState & LVIS_FOCUSED) && !(nmlistview->uNewState & LVIS_FOCUSED)) {
+    lostFocus = true;
+  } else if(!(nmlistview->uOldState & LVIS_SELECTED) && (nmlistview->uNewState & LVIS_SELECTED)) {
+    lostFocus = false;
+    listView.state.selected = true;
+    listView.state.selection = selection;
+    if(!locked && listView.onChange) listView.onChange();
+  } else if(!lostFocus && !listView.state.selected) {
+    lostFocus = false;
+    listView.state.selected = false;
+    listView.state.selection = 0;
+    if(!locked && listView.onChange) listView.onChange();
+  }
+}
+
+LRESULT pListView::onCustomDraw(LPARAM lparam) {
+  LPNMLVCUSTOMDRAW lvcd = (LPNMLVCUSTOMDRAW)lparam;
+
+  switch(lvcd->nmcd.dwDrawStage) {
+  case CDDS_PREPAINT:
+    return CDRF_NOTIFYITEMDRAW;
+  case CDDS_ITEMPREPAINT:
+    if(listView.state.headerText.size() >= 2) {
+      //draw alternating row colors of there are two or more columns
+      if(lvcd->nmcd.dwItemSpec % 2) lvcd->clrTextBk = GetSysColor(COLOR_WINDOW) ^ 0x070707;
+    }
+    return CDRF_DODEFAULT;
+  default:
+    return CDRF_DODEFAULT;
   }
 }
 

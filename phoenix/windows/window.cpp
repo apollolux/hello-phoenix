@@ -58,7 +58,11 @@ void pWindow::append(Menu& menu) {
 }
 
 void pWindow::append(Widget& widget) {
-  widget.p.parentWindow = &window;
+  if(GetParentWidget(&widget)) {
+    widget.p.parentHwnd = GetParentWidget(&widget)->p.hwnd;
+  } else {
+    widget.p.parentHwnd = window.p.hwnd;
+  }
   widget.p.orphan();
 
   if(widget.font().empty() && !window.state.widgetFont.empty()) {
@@ -258,6 +262,64 @@ void pWindow::updateMenu() {
   }
 
   SetMenu(hwnd, window.state.menuVisible ? hmenu : 0);
+}
+
+void pWindow::onClose() {
+  if(window.onClose) window.onClose();
+  else window.setVisible(false);
+  if(window.state.modal && !window.state.visible) window.setModal(false);
+}
+
+void pWindow::onDrop(WPARAM wparam) {
+  lstring paths = DropPaths(wparam);
+  if(paths.empty()) return;
+  if(window.onDrop) window.onDrop(paths);
+}
+
+bool pWindow::onEraseBackground() {
+  if(brush == 0) return false;
+  RECT rc;
+  GetClientRect(hwnd, &rc);
+  PAINTSTRUCT ps;
+  BeginPaint(hwnd, &ps);
+  FillRect(ps.hdc, &rc, brush);
+  EndPaint(hwnd, &ps);
+  return true;
+}
+
+void pWindow::onModalBegin() {
+  if(Application::Windows::onModalBegin) Application::Windows::onModalBegin();
+}
+
+void pWindow::onModalEnd() {
+  if(Application::Windows::onModalEnd) Application::Windows::onModalEnd();
+}
+
+void pWindow::onMove() {
+  if(locked) return;
+
+  Geometry windowGeometry = geometry();
+  window.state.geometry.x = windowGeometry.x;
+  window.state.geometry.y = windowGeometry.y;
+
+  if(window.onMove) window.onMove();
+}
+
+void pWindow::onSize() {
+  if(locked) return;
+  SetWindowPos(hstatus, NULL, 0, 0, 0, 0, SWP_NOZORDER | SWP_FRAMECHANGED);
+
+  Geometry windowGeometry = geometry();
+  window.state.geometry.width = windowGeometry.width;
+  window.state.geometry.height = windowGeometry.height;
+
+  for(auto& layout : window.state.layout) {
+    Geometry geom = geometry();
+    geom.x = geom.y = 0;
+    layout.setGeometry(geom);
+  }
+
+  if(window.onSize) window.onSize();
 }
 
 }

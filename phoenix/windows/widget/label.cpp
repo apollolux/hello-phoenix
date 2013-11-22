@@ -11,7 +11,9 @@ void pLabel::setText(string text) {
 }
 
 void pLabel::constructor() {
-  hwnd = CreateWindow(L"phoenix_label", L"", WS_CHILD, 0, 0, 0, 0, parentWindow->p.hwnd, (HMENU)id, GetModuleHandle(0), 0);
+  hwnd = CreateWindow(L"phoenix_label", L"",
+    WS_CHILD,
+    0, 0, 0, 0, parentHwnd, (HMENU)id, GetModuleHandle(0), 0);
   SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)&label);
   setDefaultFont();
   setText(label.state.text);

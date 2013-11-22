@@ -29,7 +29,9 @@ void pFrame::setVisible(bool visible) {
 }
 
 void pFrame::constructor() {
-  hwnd = CreateWindow(L"BUTTON", L"", WS_CHILD | BS_GROUPBOX, 0, 0, 0, 0, parentWindow->p.hwnd, (HMENU)id, GetModuleHandle(0), 0);
+  hwnd = CreateWindow(L"BUTTON", L"",
+    WS_CHILD | BS_GROUPBOX,
+    0, 0, 0, 0, parentHwnd, (HMENU)id, GetModuleHandle(0), 0);
   SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)&frame);
   setDefaultFont();
   setText(frame.state.text);

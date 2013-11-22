@@ -1,5 +1,7 @@
 namespace phoenix {
 
+typedef LRESULT CALLBACK (*WindowProc)(HWND, UINT, WPARAM, LPARAM);
+
 struct pApplication {
   static void run();
   static bool pendingEvents();
@@ -130,6 +132,14 @@ struct pWindow : public pObject {
   void constructor();
   void destructor();
   void updateMenu();
+
+  void onClose();
+  void onDrop(WPARAM wparam);
+  bool onEraseBackground();
+  void onModalBegin();
+  void onModalEnd();
+  void onMove();
+  void onSize();
 };
 
 struct pAction : public pObject {
@@ -180,6 +190,8 @@ struct pItem : public pAction {
   void constructor();
   void destructor();
   void createBitmap();
+
+  void onActivate();
 };
 
 struct pCheckItem : public pAction {
@@ -191,6 +203,8 @@ struct pCheckItem : public pAction {
   pCheckItem(CheckItem& checkItem) : pAction(checkItem), checkItem(checkItem) {}
   void constructor();
   void destructor();
+
+  void onToggle();
 };
 
 struct pRadioItem : public pAction {
@@ -203,6 +217,8 @@ struct pRadioItem : public pAction {
   pRadioItem(RadioItem& radioItem) : pAction(radioItem), radioItem(radioItem) {}
   void constructor();
   void destructor();
+
+  void onActivate();
 };
 
 struct pSizable : public pObject {
@@ -219,7 +235,7 @@ struct pLayout : public pSizable {
 
 struct pWidget : public pSizable {
   Widget& widget;
-  Window* parentWindow;
+  HWND parentHwnd;
   HWND hwnd;
   HFONT hfont;
 
@@ -231,7 +247,7 @@ struct pWidget : public pSizable {
   virtual void setGeometry(Geometry geometry);
   virtual void setVisible(bool visible);
 
-  pWidget(Widget& widget) : pSizable(widget), widget(widget) { parentWindow = &pWindow::none(); }
+  pWidget(Widget& widget) : pSizable(widget), widget(widget) { parentHwnd = pWindow::none().p.hwnd; }
   void constructor();
   void destructor();
   virtual void orphan();
@@ -252,15 +268,15 @@ struct pButton : public pWidget {
   void constructor();
   void destructor();
   void orphan();
+
+  void onActivate();
 };
 
 struct pCanvas : public pWidget {
   Canvas& canvas;
-  HBRUSH colorBrush = nullptr;
   uint32_t* surface = nullptr;
   unsigned surfaceWidth = 0;
   unsigned surfaceHeight = 0;
-  unsigned surfaceBackgroundColor = 0;
 
   void setDroppable(bool droppable);
   void setGeometry(Geometry geometry);
@@ -271,7 +287,6 @@ struct pCanvas : public pWidget {
   void constructor();
   void destructor();
   void orphan();
-  uint32_t getBackgroundColor();
   void paint();
   void rasterize();
   void redraw();
@@ -292,6 +307,8 @@ struct pCheckButton : public pWidget {
   void constructor();
   void destructor();
   void orphan();
+
+  void onToggle();
 };
 
 struct pCheckLabel : public pWidget {
@@ -305,6 +322,8 @@ struct pCheckLabel : public pWidget {
   void constructor();
   void destructor();
   void orphan();
+
+  void onToggle();
 };
 
 struct pComboButton : public pWidget {
@@ -314,6 +333,7 @@ struct pComboButton : public pWidget {
   void remove(unsigned selection);
   Size minimumSize();
   void reset();
+  void setGeometry(Geometry geometry);
   void setSelection(unsigned selection);
   void setText(unsigned selection, string text);
 
@@ -321,7 +341,8 @@ struct pComboButton : public pWidget {
   void constructor();
   void destructor();
   void orphan();
-  void setGeometry(Geometry geometry);
+
+  void onChange();
 };
 
 struct pConsole : public pWidget {
@@ -385,6 +406,8 @@ struct pHorizontalScroller : public pWidget {
   void constructor();
   void destructor();
   void orphan();
+
+  void onChange(WPARAM wparam);
 };
 
 struct pHorizontalSlider : public pWidget {
@@ -398,6 +421,8 @@ struct pHorizontalSlider : public pWidget {
   void constructor();
   void destructor();
   void orphan();
+
+  void onChange();
 };
 
 struct pLabel : public pWidget {
@@ -424,6 +449,8 @@ struct pLineEdit : public pWidget {
   void constructor();
   void destructor();
   void orphan();
+
+  void onChange();
 };
 
 struct pListView : public pWidget {
@@ -439,6 +466,7 @@ struct pListView : public pWidget {
   void reset();
   void setCheckable(bool checkable);
   void setChecked(unsigned selection, bool checked);
+  void setGeometry(Geometry geometry);
   void setHeaderText(const lstring& text);
   void setHeaderVisible(bool visible);
   void setImage(unsigned selection, unsigned position, const image& image);
@@ -450,8 +478,11 @@ struct pListView : public pWidget {
   void constructor();
   void destructor();
   void orphan();
-  void setGeometry(Geometry geometry);
   void buildImageList();
+
+  void onActivate(LPARAM lparam);
+  void onChange(LPARAM lparam);
+  LRESULT onCustomDraw(LPARAM lparam);
 };
 
 struct pProgressBar : public pWidget {
@@ -481,6 +512,8 @@ struct pRadioButton : public pWidget {
   void constructor();
   void destructor();
   void orphan();
+
+  void onActivate();
 };
 
 struct pRadioLabel : public pWidget {
@@ -495,10 +528,13 @@ struct pRadioLabel : public pWidget {
   void constructor();
   void destructor();
   void orphan();
+
+  void onActivate();
 };
 
 struct pTabFrame : public pWidget {
   TabFrame& tabFrame;
+  WindowProc windowProc = nullptr;
   HIMAGELIST imageList = nullptr;
 
   void append(string text, const image& image);
@@ -516,6 +552,9 @@ struct pTabFrame : public pWidget {
   void orphan();
   void buildImageList();
   void synchronizeLayout();
+
+  void onChange();
+  void onDrawItem(LPARAM lparam);
 };
 
 struct pTextEdit : public pWidget {
@@ -531,6 +570,8 @@ struct pTextEdit : public pWidget {
   void constructor();
   void destructor();
   void orphan();
+
+  void onChange();
 };
 
 struct pVerticalScroller : public pWidget {
@@ -544,6 +585,8 @@ struct pVerticalScroller : public pWidget {
   void constructor();
   void destructor();
   void orphan();
+
+  void onChange(WPARAM wparam);
 };
 
 struct pVerticalSlider : public pWidget {
@@ -557,6 +600,8 @@ struct pVerticalSlider : public pWidget {
   void constructor();
   void destructor();
   void orphan();
+
+  void onChange();
 };
 
 struct pViewport : public pWidget {

@@ -53,7 +53,9 @@ void pCheckButton::setText(string text) {
 }
 
 void pCheckButton::constructor() {
-  hwnd = CreateWindow(L"BUTTON", L"", WS_CHILD | WS_TABSTOP | BS_CHECKBOX | BS_PUSHLIKE, 0, 0, 0, 0, parentWindow->p.hwnd, (HMENU)id, GetModuleHandle(0), 0);
+  hwnd = CreateWindow(L"BUTTON", L"",
+    WS_CHILD | WS_TABSTOP | BS_CHECKBOX | BS_PUSHLIKE,
+    0, 0, 0, 0, parentHwnd, (HMENU)id, GetModuleHandle(0), 0);
   SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)&checkButton);
   setDefaultFont();
   setChecked(checkButton.state.checked);
@@ -71,6 +73,12 @@ void pCheckButton::destructor() {
 void pCheckButton::orphan() {
   destructor();
   constructor();
+}
+
+void pCheckButton::onToggle() {
+  checkButton.state.checked = !checkButton.state.checked;
+  setChecked(checkButton.state.checked);
+  if(checkButton.onToggle) checkButton.onToggle();
 }
 
 }

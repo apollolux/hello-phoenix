@@ -72,7 +72,7 @@ void pButton::setText(string text) {
 }
 
 void pButton::constructor() {
-  hwnd = CreateWindow(L"BUTTON", L"", WS_CHILD | WS_TABSTOP, 0, 0, 0, 0, parentWindow->p.hwnd, (HMENU)id, GetModuleHandle(0), 0);
+  hwnd = CreateWindow(L"BUTTON", L"", WS_CHILD | WS_TABSTOP, 0, 0, 0, 0, parentHwnd, (HMENU)id, GetModuleHandle(0), 0);
   SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)&button);
   setDefaultFont();
   setImage(button.state.image, button.state.orientation);
@@ -89,6 +89,10 @@ void pButton::destructor() {
 void pButton::orphan() {
   destructor();
   constructor();
+}
+
+void pButton::onActivate() {
+  if(button.onActivate) button.onActivate();
 }
 
 }

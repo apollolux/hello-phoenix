@@ -23,4 +23,10 @@ void pRadioItem::destructor() {
   if(parentMenu) parentMenu->remove(radioItem);
 }
 
+void pRadioItem::onActivate() {
+  if(radioItem.state.checked) return;
+  radioItem.setChecked();
+  if(radioItem.onActivate) radioItem.onActivate();
+}
+
 }

@@ -18,7 +18,7 @@ void pHorizontalSlider::setPosition(unsigned position) {
 void pHorizontalSlider::constructor() {
   hwnd = CreateWindow(
     TRACKBAR_CLASS, L"", WS_CHILD | WS_TABSTOP | TBS_NOTICKS | TBS_BOTH | TBS_HORZ,
-    0, 0, 0, 0, parentWindow->p.hwnd, (HMENU)id, GetModuleHandle(0), 0
+    0, 0, 0, 0, parentHwnd, (HMENU)id, GetModuleHandle(0), 0
   );
   SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)&horizontalSlider);
   unsigned position = horizontalSlider.state.position;
@@ -34,6 +34,13 @@ void pHorizontalSlider::destructor() {
 void pHorizontalSlider::orphan() {
   destructor();
   constructor();
+}
+
+void pHorizontalSlider::onChange() {
+  unsigned position = SendMessage(hwnd, TBM_GETPOS, 0, 0);
+  if(position == horizontalSlider.state.position) return;
+  horizontalSlider.state.position = position;
+  if(horizontalSlider.onChange) horizontalSlider.onChange();
 }
 
 }

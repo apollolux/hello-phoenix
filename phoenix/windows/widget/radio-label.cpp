@@ -22,7 +22,7 @@ void pRadioLabel::constructor() {
   hwnd = CreateWindow(
     L"BUTTON", L"",
     WS_CHILD | WS_TABSTOP | BS_RADIOBUTTON,
-    0, 0, 0, 0, parentWindow->p.hwnd, (HMENU)id, GetModuleHandle(0), 0
+    0, 0, 0, 0, parentHwnd, (HMENU)id, GetModuleHandle(0), 0
   );
   SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)&radioLabel);
   setDefaultFont();
@@ -38,6 +38,12 @@ void pRadioLabel::destructor() {
 void pRadioLabel::orphan() {
   destructor();
   constructor();
+}
+
+void pRadioLabel::onActivate() {
+  if(radioLabel.state.checked) return;
+  radioLabel.setChecked();
+  if(radioLabel.onActivate) radioLabel.onActivate();
 }
 
 }

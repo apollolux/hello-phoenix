@@ -4,7 +4,7 @@ GtkWidget* pFrame::container(Widget& widget) {
   return gtk_widget_get_parent(gtkWidget);
 }
 
-Size pFrame::containerOffset() {
+Position pFrame::containerOffset() {
   return {0, 0};
 }
 
@@ -18,8 +18,8 @@ void pFrame::setGeometry(Geometry geometry) {
   if(frame.state.layout == nullptr) return;
   Size size = pFont::size(widget.state.font, frame.state.text);
   if(frame.state.text.empty()) size.height = 8;
-  geometry.x += 1, geometry.width -= 3;
-  geometry.y += size.height, geometry.height -= size.height + 2;
+  geometry.x += 2, geometry.width -= 5;
+  geometry.y += size.height - 1, geometry.height -= size.height + 2;
   frame.state.layout->setGeometry(geometry);
 }
 

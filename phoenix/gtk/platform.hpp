@@ -224,6 +224,8 @@ struct pRadioItem : public pAction {
 struct pSizable : public pObject {
   Sizable& sizable;
 
+  virtual Position displacement() { return {0, 0}; }
+
   pSizable(Sizable &sizable) : pObject(sizable), sizable(sizable) {}
 };
 
@@ -239,7 +241,7 @@ struct pWidget : public pSizable {
   GtkWidget* gtkParent = nullptr;
 
   virtual GtkWidget* container(Widget& widget);
-  virtual Size containerOffset();
+  virtual Position containerOffset();
   virtual bool focused();
   virtual Size minimumSize();
   virtual void setEnabled(bool enabled);
@@ -355,7 +357,7 @@ struct pFrame : public pWidget {
   Frame& frame;
 
   GtkWidget* container(Widget& widget);
-  Size containerOffset();
+  Position containerOffset();
   void setEnabled(bool enabled);
   void setGeometry(Geometry geometry);
   void setText(string text);
@@ -541,7 +543,8 @@ struct pTabFrame : public pWidget {
 
   void append(string text, const image& image);
   GtkWidget* container(Widget& widget);
-  Size containerOffset();
+  Position containerOffset();
+  Position displacement();
   void remove(unsigned selection);
   void setEnabled(bool enabled);
   void setGeometry(Geometry geometry);

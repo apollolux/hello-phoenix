@@ -4,7 +4,7 @@ GtkWidget* pWidget::container(Widget& widget) {
   return nullptr;
 }
 
-Size pWidget::containerOffset() {
+Position pWidget::containerOffset() {
   return {0, 0};
 }
 
@@ -32,13 +32,11 @@ void pWidget::setFont(string font) {
 }
 
 void pWidget::setGeometry(Geometry geometry) {
-  if(HasParentWidget(widget)) {
-    Size offset = GetParentWidget(widget)->p.containerOffset();
-    geometry.x -= offset.width;
-    geometry.y -= offset.height;
-  }
+  Position displacement = GetDisplacement(&widget);
+  geometry.x -= displacement.x;
+  geometry.y -= displacement.y;
 
-  if(sizable.window() && sizable.window()->visible()) gtk_fixed_move(GTK_FIXED(gtkParent), gtkWidget, geometry.x, geometry.y);
+  if(gtkParent) gtk_fixed_move(GTK_FIXED(gtkParent), gtkWidget, geometry.x, geometry.y);
   unsigned width = (signed)geometry.width <= 0 ? 1u : geometry.width;
   unsigned height = (signed)geometry.height <= 0 ? 1u : geometry.height;
   gtk_widget_set_size_request(gtkWidget, width, height);

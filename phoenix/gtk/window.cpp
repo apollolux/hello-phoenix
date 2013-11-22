@@ -148,35 +148,13 @@ void pWindow::append(Menu& menu) {
   gtk_widget_show(menu.p.widget);
 }
 
-static Layout* GetParentLayout(Widget& widget) {
-  Layout* layout = widget.layout();
-  while(layout) {
-    if(layout->state.widget) return layout;
-    layout = layout->layout();
-  }
-  return nullptr;
-}
-
-static Widget* GetParentWidget(Widget& widget) {
-  Layout* layout = widget.layout();
-  while(layout) {
-    if(layout->state.widget) return layout->state.widget;
-    layout = layout->layout();
-  }
-  return nullptr;
-}
-
-static bool HasParentWidget(Widget& widget) {
-  return GetParentWidget(widget) != nullptr;
-}
-
 void pWindow::append(Widget& widget) {
   if(widget.font().empty() && !window.state.widgetFont.empty()) {
     widget.setFont(window.state.widgetFont);
   }
 
-  if(HasParentWidget(widget)) {
-    widget.p.gtkParent = GetParentWidget(widget)->p.container(widget);
+  if(HasParentWidget(&widget)) {
+    widget.p.gtkParent = GetParentWidget(&widget)->p.container(widget);
   } else {
     widget.p.gtkParent = formContainer;
   }

@@ -46,6 +46,37 @@ static lstring DropPaths(GtkSelectionData* data) {
   return paths;
 }
 
+static Position GetDisplacement(Sizable* sizable) {
+  Position position;
+  while(sizable->state.parent) {
+    Position displacement = sizable->state.parent->p.displacement();
+    position.x += displacement.x;
+    position.y += displacement.y;
+    sizable = sizable->state.parent;
+  }
+  return position;
+}
+
+static Layout* GetParentWidgetLayout(Sizable* sizable) {
+  while(sizable) {
+    if(sizable->state.parent && dynamic_cast<TabFrame*>(sizable->state.parent)) return (Layout*)sizable;
+    sizable = sizable->state.parent;
+  }
+  return nullptr;
+}
+
+static Widget* GetParentWidget(Sizable* sizable) {
+  while(sizable) {
+    if(sizable->state.parent && dynamic_cast<TabFrame*>(sizable->state.parent)) return (Widget*)sizable->state.parent;
+    sizable = sizable->state.parent;
+  }
+  return nullptr;
+}
+
+static bool HasParentWidget(Sizable* sizable) {
+  return GetParentWidget(sizable) != nullptr;
+}
+
 static Keyboard::Keycode Keysym(unsigned keysym) {
   switch(keysym) {
   case GDK_Escape: return Keyboard::Keycode::Escape;
