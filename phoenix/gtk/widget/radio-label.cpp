@@ -36,21 +36,6 @@ void pRadioLabel::setText(string text) {
   gtk_button_set_label(GTK_BUTTON(gtkWidget), text);
 }
 
-void pRadioLabel::onActivate() {
-  if(parent().locked == false) {
-    bool wasChecked = radioLabel.state.checked;
-    setChecked();
-    if(wasChecked == false) {
-      if(radioLabel.onActivate) radioLabel.onActivate();
-    }
-  }
-}
-
-pRadioLabel& pRadioLabel::parent() {
-  if(radioLabel.state.group.size()) return radioLabel.state.group.first().p;
-  return *this;
-}
-
 void pRadioLabel::constructor() {
   gtkWidget = gtk_radio_button_new_with_label(nullptr, "");
   g_signal_connect(G_OBJECT(gtkWidget), "toggled", G_CALLBACK(RadioLabel_activate), (gpointer)&radioLabel);
@@ -66,6 +51,19 @@ void pRadioLabel::destructor() {
 void pRadioLabel::orphan() {
   destructor();
   constructor();
+}
+
+void pRadioLabel::onActivate() {
+  if(parent().locked) return;
+  bool wasChecked = radioLabel.state.checked;
+  setChecked();
+  if(wasChecked) return;
+  if(radioLabel.onActivate) radioLabel.onActivate();
+}
+
+pRadioLabel& pRadioLabel::parent() {
+  if(radioLabel.state.group.size()) return radioLabel.state.group.first().p;
+  return *this;
 }
 
 }

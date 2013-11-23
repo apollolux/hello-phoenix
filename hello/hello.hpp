@@ -29,12 +29,15 @@ struct Win : Window {
 		Item mHelpAbout;
 	/** layouts **/
 	VerticalLayout lMain, lTab1, lTab1a, lTab2, lTab3;
-	Label lblText, lblT2, lblT3;
+	HorizontalLayout lT2Btns;
 	TabFrame lTabbed;
-	/** aux **/
-	FileEntry feFile;
-	Spritesheet sprTabs;
 	Frame fsT1;
+	/** widgets **/
+	FileEntry feFile;
+	Label lblText, lblT2, lblT3;
+	Button bImg, bImgText, bText;
+	/** aux **/
+	Spritesheet sprTabs;
 	BrowserWindow browser;	/* file browser for "Open File" functionality */
 	/** proc **/
 	void openFile(const string &fn);

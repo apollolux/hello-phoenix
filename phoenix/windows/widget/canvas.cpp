@@ -18,6 +18,11 @@ static LRESULT CALLBACK Canvas_windowProc(HWND hwnd, UINT msg, WPARAM wparam, LP
     return DLGC_STATIC | DLGC_WANTCHARS;
   }
 
+  if(msg == WM_ERASEBKGND) {
+    //background is erased during WM_PAINT to prevent flickering
+    return TRUE;
+  }
+
   if(msg == WM_PAINT) {
     canvas.p.paint();
     return TRUE;
@@ -103,6 +108,8 @@ void pCanvas::orphan() {
 }
 
 void pCanvas::paint() {
+  if(surface == nullptr) return;
+
   PAINTSTRUCT ps;
   BeginPaint(hwnd, &ps);
 
@@ -110,25 +117,39 @@ void pCanvas::paint() {
   unsigned width = surfaceWidth;
   unsigned height = surfaceHeight;
 
-  if(data) {
-    BITMAPINFO bmi;
-    memset(&bmi, 0, sizeof(BITMAPINFO));
-    bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-    bmi.bmiHeader.biPlanes = 1;
-    bmi.bmiHeader.biBitCount = 32;
-    bmi.bmiHeader.biCompression = BI_RGB;
-    bmi.bmiHeader.biWidth = width;
-    bmi.bmiHeader.biHeight = -height;  //GDI stores bitmaps upside now; negative height flips bitmap
-    bmi.bmiHeader.biSizeImage = width * height * sizeof(uint32_t);
+  HDC hdc = CreateCompatibleDC(ps.hdc);
+  BITMAPINFO bmi;
+  memset(&bmi, 0, sizeof(BITMAPINFO));
+  bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+  bmi.bmiHeader.biPlanes = 1;
+  bmi.bmiHeader.biBitCount = 32;
+  bmi.bmiHeader.biCompression = BI_RGB;
+  bmi.bmiHeader.biWidth = width;
+  bmi.bmiHeader.biHeight = -height;  //GDI stores bitmaps upside now; negative height flips bitmap
+  bmi.bmiHeader.biSizeImage = width * height * sizeof(uint32_t);
+  void* bits = nullptr;
+  HBITMAP bitmap = CreateDIBSection(hdc, &bmi, DIB_RGB_COLORS, &bits, NULL, 0);
+  if(bits) memcpy(bits, data, width * height * sizeof(uint32_t));
+  SelectObject(hdc, bitmap);
 
-    SetDIBitsToDevice(ps.hdc, 0, 0, width, height, 0, 0, 0, height, (void*)data, &bmi, DIB_RGB_COLORS);
-  }
+  BLENDFUNCTION bf;
+  bf.BlendOp = AC_SRC_OVER;
+  bf.BlendFlags = 0;
+  bf.SourceConstantAlpha = 255;
+  bf.AlphaFormat = AC_SRC_ALPHA;
+
+  RECT rc;
+  GetClientRect(hwnd, &rc);
+  DrawThemeParentBackground(hwnd, ps.hdc, &rc);
+  AlphaBlend(ps.hdc, 0, 0, width, height, hdc, 0, 0, width, height, bf);
+
+  DeleteObject(bitmap);
+  DeleteDC(hdc);
 
   EndPaint(hwnd, &ps);
 }
 
 void pCanvas::rasterize() {
-  unsigned backgroundColor = GetSysColor(COLOR_3DFACE);
   unsigned width = canvas.state.width;
   unsigned height = canvas.state.height;
   if(width == 0) width = widget.state.geometry.width;
@@ -141,7 +162,6 @@ void pCanvas::rasterize() {
     nall::image image;
     image.allocate(width, height);
     image.fill(canvas.state.color.argb());
-    image.alphaBlend(backgroundColor);
     memcpy(surface, image.data, image.size);
   }
 
@@ -151,7 +171,6 @@ void pCanvas::rasterize() {
     image.gradient(
       canvas.state.gradient[0].argb(), canvas.state.gradient[1].argb(), canvas.state.gradient[2].argb(), canvas.state.gradient[3].argb()
     );
-    image.alphaBlend(backgroundColor);
     memcpy(surface, image.data, image.size);
   }
 
@@ -159,17 +178,12 @@ void pCanvas::rasterize() {
     nall::image image = canvas.state.image;
     image.scale(width, height);
     image.transform(0, 32, 255u << 24, 255u << 16, 255u << 8, 255u << 0);
-    image.alphaBlend(backgroundColor);
     memcpy(surface, image.data, image.size);
   }
 
   if(canvas.state.mode == Canvas::Mode::Data) {
     if(width == canvas.state.width && height == canvas.state.height) {
-      nall::image image;
-      image.allocate(width, height);
-      memcpy(image.data, canvas.state.data, image.size);
-      image.alphaBlend(backgroundColor);
-      memcpy(surface, image.data, image.size);
+      memcpy(surface, canvas.state.data, width * height * sizeof(uint32_t));
     } else {
       memset(surface, 0x00, width * height * sizeof(uint32_t));
     }

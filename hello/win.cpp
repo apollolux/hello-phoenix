@@ -23,6 +23,9 @@ void Win::init() {
 	lblText.setText("Hello world!");
 	lblT2.setText("Hello tabs!");
 	lblT3.setText("Hello phoenix!");
+	bImg.setText("");
+	bImgText.setText("Icon+Text");
+	bText.setText("Text");
 	setStatusText({
 		"Hello world!",
 		" ",
@@ -90,8 +93,13 @@ void Win::reflowStatic() {
 		lTabbed.setImage(0, sprTabs.slice(16,144,16,16));
 		lTabbed.setImage(1, sprTabs.slice(144,128,16,16));
 		lTabbed.setImage(2, sprTabs.slice(160,112,16,16));
+		bImg.setImage(sprTabs.slice(240,96,16,16) );
+		bImgText.setImage(sprTabs.slice(176,112,16,16) );
+		//lvSw.setImage(5,0, spr.slice(144,96,16,16) );
 	}
 	else {
+		bImg.setText("Icon (no icon)");
+		bImgText.setText("Image+Text (no icon)");
 		lblT2.setText("Hello tabs (no icons)!");
 	}
 	setMenuVisible();
@@ -103,7 +111,12 @@ void Win::reflow() {
 	lMain.append(lTabbed, {~0, ~0}, 5);
 		lTab1.remove(fsT1); lTab1.append(fsT1, {~0, ~0});
 			lTab1a.remove(lblText); lTab1a.append(lblText, {~0, 0});
-		lTab2.remove(lblT2); lTab2.append(lblT2, {~0, ~0});
+		lTab2.remove(lblT2);
+			lTab2.append(lblT2, {~0, 0}, 5);
+			lTab2.append(lT2Btns, {~0, 0});
+				lT2Btns.append(bImg, {0, 0}, 5);
+				lT2Btns.append(bText, {0, ~0}, 5);
+				lT2Btns.append(bImgText, {0, 0});
 		lTab3.remove(lblT3); lTab3.append(lblT3, {~0, ~0});
 	lMain.append(feFile, {~0, 0}); feFile.reflow();
 }

@@ -10,15 +10,19 @@ struct TestWindow : Window {
   VerticalLayout innerLayout;
   TabFrame finalFrame;
   VerticalLayout finalLayout;
+  Label label;
+  HorizontalSlider slider;
   ListView listView;
+  HorizontalSlider outerSlider;
 
   TestWindow() {
     setWindowGeometry({64, 760, 480, 320});
+    setBackgroundColor({128, 64, 64, 128});
 
     layout.setMargin(5);
     tabFrame.append("Item 1");
     tabFrame.append("Item 2");
-    layout.append(tabFrame, {~0, ~0});
+    layout.append(tabFrame, {~0, ~0}, 5);
     tabLayout.setMargin(5);
     innerFrame.append("Tab 1");
     innerFrame.append("Tab 2");
@@ -27,12 +31,17 @@ struct TestWindow : Window {
     finalFrame.append("Final 1");
     finalFrame.append("Final 2");
     finalLayout.setMargin(5);
+    label.setText("Test\nLabel");
+    slider.setLength(101);
+    finalLayout.append(label, {~0, 0}, 5);
+    finalLayout.append(slider, {~0, 0}, 5);
     finalLayout.append(listView, {~0, ~0});
     finalFrame.setLayout(0, finalLayout);
     innerLayout.append(finalFrame, {~0, ~0});
     innerFrame.setLayout(0, innerLayout);
     tabLayout.append(innerFrame, {~0, ~0});
     tabFrame.setLayout(0, tabLayout);
+    layout.append(outerSlider, {~0, 0});
     append(layout);
 
     setVisible();
@@ -84,8 +93,9 @@ struct MainWindow : Window {
 
     tabLayout1.setMargin(5);
 
-    canvas.setImage({"higan.png"});
-    canvas.setSize({512, 512});
+    nall::image image("higan.png");
+    canvas.setSize({image.width, image.height});
+    canvas.setImage(image);
 
     //
 

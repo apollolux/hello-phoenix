@@ -219,6 +219,8 @@ struct pRadioItem : public pAction {
   void constructor();
   void destructor();
   void orphan();
+  void onActivate();
+  pRadioItem& parent();
 };
 
 struct pSizable : public pObject {

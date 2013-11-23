@@ -1,18 +1,18 @@
 namespace phoenix {
 
 static void RadioItem_activate(GtkCheckMenuItem* gtkCheckMenuItem, RadioItem* self) {
-  for(auto& item : self->state.group) item.state.checked = (&item == self);
-  if(!self->p.locked && self->checked() && self->onActivate) self->onActivate();
+  self->p.onActivate();
 }
 
 void pRadioItem::setChecked() {
-  locked = true;
+  parent().locked = true;
   for(auto& item : radioItem.state.group) gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item.p.widget), false);
   gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(widget), true);
-  locked = false;
+  parent().locked = false;
 }
 
 void pRadioItem::setGroup(const group<RadioItem>& group) {
+  parent().locked = true;
   for(auto& item : group) {
     if(&item == &group.first()) continue;
     GSList* currentGroup = gtk_radio_menu_item_get_group(GTK_RADIO_MENU_ITEM(group.first().p.widget));
@@ -20,6 +20,7 @@ void pRadioItem::setGroup(const group<RadioItem>& group) {
       gtk_radio_menu_item_set_group(GTK_RADIO_MENU_ITEM(item.p.widget), currentGroup);
     }
   }
+  parent().locked = false;
 }
 
 void pRadioItem::setText(string text) {
@@ -43,6 +44,19 @@ void pRadioItem::destructor() {
 void pRadioItem::orphan() {
   destructor();
   constructor();
+}
+
+void pRadioItem::onActivate() {
+  if(parent().locked) return;
+  bool wasChecked = radioItem.state.checked;
+  radioItem.setChecked();
+  if(wasChecked) return;
+  if(radioItem.onActivate) radioItem.onActivate();
+}
+
+pRadioItem& pRadioItem::parent() {
+  if(radioItem.state.group.size()) return radioItem.state.group.first().p;
+  return *this;
 }
 
 }
