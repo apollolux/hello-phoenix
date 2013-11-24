@@ -10,6 +10,7 @@ void Win::openFile(const string &fn) {
 }
 void Win::init() {
 	/** init settings **/
+	setWindowGeometry({32,32,640,480});
 	mFile.setText("File");
 		mFileOpen.setText("Open");
 		mFileQuit.setText("Quit");
@@ -26,6 +27,28 @@ void Win::init() {
 	bImg.setText("");
 	bImgText.setText("Icon+Text");
 	bText.setText("Text");
+	cnSmp.setSize({256,256});
+	//cnSmp.setColor({128,0,0,0});
+	//cnSmp.setColor({255,0,0,0});
+	cnSmp.setData();
+	cnSmp.fill_old(0xff000000);
+	cnSmp.plot(64, 64, 0xffffffff);
+	cnSmp.plot(128, 64, 0xff000000);
+	uint32_t colT = 0xff2020ff;
+	cnSmp.plot(127, 127, colT);
+	cnSmp.plot(127, 128, colT);
+	cnSmp.plot(127, 129, colT);
+	cnSmp.plot(128, 127, colT);
+	cnSmp.plot(128, 128, colT);
+	cnSmp.plot(128, 129, colT);
+	cnSmp.plot(129, 129, colT);
+	cnSmp.plot(129, 128, colT);
+	cnSmp.plot(129, 127, colT);
+	//cnSmp.line(8,8, 64,192,0xff4080ff);
+	cnSmp.line(10,10, 10,210,0xffffffff);
+	cnSmp.line(10,10, 30,210,0xffffffff);
+	cnSmp.line(10,10, 210,10,0xffffffff);
+	cnSmp.line(10,10, 210,30,0xffffffff);
 	setStatusText({
 		"Hello world!",
 		" ",
@@ -49,6 +72,38 @@ void Win::init() {
 		      "License: ", "ISC"
 		    })
     		.information();
+	};
+	/** widget methods **/
+	cnSmp.onMousePress = [&](Mouse::Button b) {
+		Position* p = &cnSmp.current;
+		if (b==Mouse::Button::Left) {
+			uint32_t colT = 0x20ffff20;
+			uint32_t before = cnSmp.at(p->x, p->y);
+			cnSmp.plot(p->x-1,p->y-1, colT);
+			cnSmp.plot(p->x,p->y-1, colT);
+			cnSmp.plot(p->x+1,p->y-1, colT);
+			cnSmp.plot(p->x-1,p->y, colT);
+			cnSmp.plot(p->x,p->y, colT);
+			cnSmp.plot(p->x+1,p->y, colT);
+			cnSmp.plot(p->x-1,p->y+1, colT);
+			cnSmp.plot(p->x,p->y+1, colT);
+			cnSmp.plot(p->x+1,p->y+1, colT);
+			/*Size z = cnSmp.size();
+			uint32_t* d = cnSmp.data();
+			uint32_t* q = d+p->y*z.width+p->x;*/
+			setStatusText({
+				"PLOT [",
+					p->x,",",
+					p->y,":",
+					hex<8,'0'>(before),"->",hex<8,'0'>(cnSmp.at(p->x, p->y)),
+				"]"
+			});
+			cnSmp.setData();
+		}
+		else setStatusText({
+			"Button:",(unsigned)b,
+			" P[",cnSmp.current.x,",",cnSmp.current.y,"]"
+		});
 	};
 	/** window methods **/
 	onClose = &Application::quit;
@@ -117,7 +172,9 @@ void Win::reflow() {
 				lT2Btns.append(bImg, {0, 0}, 5);
 				lT2Btns.append(bText, {0, ~0}, 5);
 				lT2Btns.append(bImgText, {0, 0});
-		lTab3.remove(lblT3); lTab3.append(lblT3, {~0, ~0});
+		lTab3.remove(lblT3);
+			lTab3.append(lblT3, {~0, 0}, 5);
+			lTab3.append(cnSmp, {~0, ~0});
 	lMain.append(feFile, {~0, 0}); feFile.reflow();
 }
 void Win::resize() {
