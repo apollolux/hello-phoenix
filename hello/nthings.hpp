@@ -7,6 +7,9 @@ using namespace nall;
 #include <phoenix/phoenix.hpp>
 using namespace phoenix;
 
+#include "ncanvas.hpp"
+#include "ncurve.hpp"
+
 /****
 Spritesheet
 Load an image in preparation of sectioning
@@ -103,5 +106,44 @@ struct FileEntry : HorizontalLayout {
 	static void dummy(const string&) {}
 };
 
+
+/**
+ * "Fake" status bar class
+ **/
+struct StatusLayout : HorizontalLayout {
+/*	Timer tmPrg;
+	uint8_t prgVal;
+	ProgressBar prg;
+	Label status;
+	//Window parentWin;
+	void create(const string &s="Done.") {
+		prgVal = 0;
+		prg.setPosition(prgVal);
+		setMargin(2);
+		status.setText(s);
+		append(prg, {100, 12}, 4);
+		append(status, {~0, 12});
+		tmPrg.onTimeout = [this]() {
+			if (prgVal<101) {
+				prg.setPosition(prgVal);
+				status.setText({"(",prgVal,")"});
+				++prgVal;
+			}
+			else {
+				tmPrg.setEnabled(false);
+				MessageWindow::information(Window::None, "Done!");
+			}
+		};
+	}
+	void start(uint8_t st=0) {
+		prgVal = st;
+		tmPrg.setEnabled(true);
+		tmPrg.setInterval(50);
+	}
+	void reset() {
+		prgVal = 0;
+		tmPrg.setEnabled(true);
+	}*/
+};
 
 #endif

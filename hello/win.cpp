@@ -32,6 +32,8 @@ void Win::init() {
 	//cnSmp.setColor({255,0,0,0});
 	cnSmp.setData();
 	cnSmp.fill_old(0xff000000);
+	//cnSmp.rect(144,144, 10, 10, 0xa0e020ff);
+	cnSmp.circle(192,192, 32, 0xa0ffe020);
 	cnSmp.plot(64, 64, 0xffffffff);
 	cnSmp.plot(128, 64, 0xff000000);
 	uint32_t colT = 0xff2020ff;
@@ -45,10 +47,17 @@ void Win::init() {
 	cnSmp.plot(129, 128, colT);
 	cnSmp.plot(129, 127, colT);
 	//cnSmp.line(8,8, 64,192,0xff4080ff);
-	cnSmp.line(10,10, 10,210,0xffffffff);
+	//cnSmp.line(10,10, 10,210,0xffffffff);
 	cnSmp.line(10,10, 30,210,0xffffffff);
-	cnSmp.line(10,10, 210,10,0xffffffff);
-	cnSmp.line(10,10, 210,30,0xffffffff);
+	cnSmp.line(10,10, 210,10,0xffff4020);
+	cnSmp.line(10,10, 210,30,0xffff4020);
+	Curve bzc;
+	//bzc.setCurve(Position(15,10),Position(130,10),Position(50,100),Position(150,190),slBz.position());
+	bzc.setCurve(FPPosition(10,10),FPPosition(10,210),FPPosition(210,230),FPPosition(210,30),6);//slBz.position());
+	//bzc.printCurve();
+	bool isDot = false, isDrawn = bzc.draw(cnSmp, colT, isDot);//!cbBz.checked());
+	//if (!isDrawn) MessageWindow().setTitle("Bezier Warning").setText("Couldn't update canvas!").warning();
+	cnSmp.setData();
 	setStatusText({
 		"Hello world!",
 		" ",
@@ -79,7 +88,7 @@ void Win::init() {
 		if (b==Mouse::Button::Left) {
 			uint32_t colT = 0x20ffff20;
 			uint32_t before = cnSmp.at(p->x, p->y);
-			cnSmp.plot(p->x-1,p->y-1, colT);
+			/*cnSmp.plot(p->x-1,p->y-1, colT);
 			cnSmp.plot(p->x,p->y-1, colT);
 			cnSmp.plot(p->x+1,p->y-1, colT);
 			cnSmp.plot(p->x-1,p->y, colT);
@@ -87,7 +96,8 @@ void Win::init() {
 			cnSmp.plot(p->x+1,p->y, colT);
 			cnSmp.plot(p->x-1,p->y+1, colT);
 			cnSmp.plot(p->x,p->y+1, colT);
-			cnSmp.plot(p->x+1,p->y+1, colT);
+			cnSmp.plot(p->x+1,p->y+1, colT);*/
+			cnSmp.circle(p->x, p->y, 3, colT);
 			/*Size z = cnSmp.size();
 			uint32_t* d = cnSmp.data();
 			uint32_t* q = d+p->y*z.width+p->x;*/

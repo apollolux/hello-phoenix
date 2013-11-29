@@ -36,6 +36,7 @@ struct Win : Window {
 	FileEntry feFile;
 	Label lblText, lblT2, lblT3;
 	Button bImg, bImgText, bText;
+	NCanvas cnSmp;
 	/** aux **/
 	Spritesheet sprTabs;
 	BrowserWindow browser;	/* file browser for "Open File" functionality */
