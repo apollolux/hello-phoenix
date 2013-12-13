@@ -17,8 +17,11 @@ endif
 all: $(objects)
 	$(compiler) -o $(application) $(objects) $(link) $(phoenixlink)
 
-obj/resource.o: ../phoenix/windows/phoenix.rc
-	windres ../phoenix/windows/phoenix.rc obj/resource.o
+#obj/resource.o: ../phoenix/windows/phoenix.rc
+#	windres ../phoenix/windows/phoenix.rc obj/resource.o
+
+obj/resource.o: app.rc
+	windres app.rc obj/resource.o
 
 obj/phoenix.o: ../phoenix/phoenix.cpp
 	$(compiler) $(phoenixflags) -o obj/phoenix.o -c ../phoenix/phoenix.cpp

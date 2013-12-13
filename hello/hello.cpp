@@ -40,6 +40,7 @@ void Prog::init() {
 	prog = this;
 	name = "Hello phoenix";
 	version = 1.0;
+	Application::setName(name);
 }
 
 /** constructor **/

@@ -99,7 +99,7 @@ class Curve {
 		void printCurve() {
 			if (points.size()>0) {
 				print("Bezier {");
-				for (auto p : points) {
+				for (auto &p : points) {
 					print("\t",p.x, ",", p.y);
 				}
 				print("}");

@@ -15,6 +15,7 @@ using namespace phoenix;
 #endif
 
 #include "blend.h"
+#include "nterra.hpp"
 
 /****
 NCanvas

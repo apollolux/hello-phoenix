@@ -9,6 +9,7 @@ using namespace phoenix;
 
 #include "ncanvas.hpp"
 #include "ncurve.hpp"
+#include "nterra.hpp"
 
 /****
 Spritesheet
